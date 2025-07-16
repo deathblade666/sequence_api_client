@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:Seqeunce_API_Client/utils/dbhelper.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:Seqeunce_API_Client/utils/sequence_api.dart';
@@ -5,18 +8,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 
 //TODO: Implement a dialog to select which accounts to add to the page.
-//TODO: Save info to DB, and restore from DB by default
 
 
 class AccountPage extends StatefulWidget {
-  AccountPage(this.prefs,{super.key});
+  AccountPage(this.prefs,{Key? key}) : super(key: key);
   SharedPreferences prefs;
 
   @override
-  State<AccountPage> createState() => _AccountPageState();
+  AccountPageState createState() => AccountPageState();
 }
 
-class _AccountPageState extends State<AccountPage> {
+class AccountPageState extends State<AccountPage> {
   late Future<List<SequenceAccount>> _accountFuture;
     String? apitoken ="";
     bool obscure = true;
@@ -27,12 +29,18 @@ class _AccountPageState extends State<AccountPage> {
   void initState() {
     super.initState();
     loadPrefs();
-    _accountFuture = SequenceApi.getAccounts(apitoken!);
+    _accountFuture = DatabaseHelper().getAccounts();
   }
 
-  Future<void> _refreshAccounts() async {
+  Future<void> refreshAccounts() async {
+    widget.prefs.setString('lastSync', DateTime.now().toIso8601String());
+    final accounts = await SequenceApi.getAccounts(apitoken!);
+    for (var account in accounts) {
+      await DatabaseHelper().upsertAccountByName(account);
+    }
+
     setState(() {
-      _accountFuture = SequenceApi.getAccounts(apitoken!);
+      _accountFuture = DatabaseHelper().getAccounts();
     });
   }
 
@@ -101,7 +109,7 @@ class _AccountPageState extends State<AccountPage> {
                                   Navigator.pop(context, apitoken);
                                 }, 
                                 child: Text("Save")
-                              )
+                              ),
                             ],
                           )
                         ],
@@ -117,7 +125,7 @@ class _AccountPageState extends State<AccountPage> {
             setState(() {
               apitoken = result;
             });
-            _refreshAccounts();
+            refreshAccounts();
           }
         },
         icon: Icon(
@@ -135,19 +143,23 @@ class _AccountPageState extends State<AccountPage> {
             return Center(child: Text('No items found'));
           } else {
             return RefreshIndicator(
-              onRefresh: _refreshAccounts,
+              onRefresh: refreshAccounts,
               child: ListView.builder(
                 physics: AlwaysScrollableScrollPhysics(),
                 itemCount: snapshot.data!.length,
-                itemBuilder: (context, index) {
+                itemBuilder: (context, index)  {
                   final item = snapshot.data![index];
+                  final lastSyncString = widget.prefs.getString('lastSync');
+                  final lastSyncFormatted = lastSyncString != null
+                    ? DateFormat('yyyy-MM-dd hh:mma').format(DateTime.parse(lastSyncString))
+                    : 'Never';
                   return ListTile(
                     title: Text(item.name ?? 'Unnamed Account'),
                     subtitle: Text(
                       'Type: ${item.type ?? 'N/A'}\nBalance: \$${item.balance?.toStringAsFixed(2) ?? '0.00'}', 
                     ),
                     trailing: Text(
-                      "Last Sync\n${DateFormat('yyyy-MM-dd hh:mma').format(DateTime.now())}",
+                      "Last Sync\n$lastSyncFormatted",
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                   );

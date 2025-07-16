@@ -5,9 +5,11 @@ import 'package:Seqeunce_API_Client/pages/rules.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Views extends StatefulWidget {
-  Views(this.prefs,this.homepageController,{super.key});
+  Views(this.prefs,this.homepageController,{super.key, required this.accountPageKey});
   PageController homepageController;
   SharedPreferences prefs;
+  final GlobalKey<AccountPageState> accountPageKey;
+
 
   @override
   State<Views> createState() => _ViewsState();
@@ -30,7 +32,7 @@ class _ViewsState extends State<Views> {
           controller: widget.homepageController,
           physics: NeverScrollableScrollPhysics(),
           children: [
-            AccountPage(widget.prefs),
+            AccountPage(widget.prefs, key: widget.accountPageKey,),
             TransferRules(widget.prefs),
             CustomRules(widget.prefs)
           ],
