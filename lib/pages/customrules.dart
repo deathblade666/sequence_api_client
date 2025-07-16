@@ -43,41 +43,48 @@ class _CustomRulesState extends State<CustomRules>{
     return Scaffold(
       floatingActionButton: IconButton.filled(
         onPressed: () async {
-          final result = await showDialog(context: context, builder: (BuildContext context){
-            return AlertDialog(
-              title: const Text("Trigger a transfer based on custom criteria"),
-              actions: [
-                TextField(
-                  controller: _nameController,
-                  decoration: InputDecoration(
-                    label: const Text("Name"),
+          final result = await showModalBottomSheet(context: context, builder: (BuildContext context){
+            return Column(
+              children: [
+                Padding(padding: EdgeInsetsGeometry.directional(top: 15)),
+                Center(
+                  child: const Text("Create Custom Rule"),
+                ),
+                Padding(
+                  padding: EdgeInsetsGeometry.directional(start: 15, end: 15),
+                  child: TextField(
+                    controller: _nameController,
+                    decoration: InputDecoration(
+                      label: const Text("Name"),
+                    ),
                   ),
                 ),
-                TextField(
-                  controller: _ruleController,
-                  decoration: InputDecoration(
-                    label: const Text("Custom Rule")
+                Padding(
+                  padding: EdgeInsetsGeometry.directional(start: 15, end: 15),
+                  child: TextField(
+                    controller: _ruleController,
+                    decoration: InputDecoration(
+                      label: const Text("Rule ID")
+                    ),
                   ),
                 ),
                 TextButton(
                   onPressed: (){
                     //TODO: Store prompt values and save to prefs
-
                     ruleId = _ruleController.text;
                     name = _nameController.text;
                     widget.prefs.setString(name,ruleId);
                     Rules.add(name);
                     print(Rules);
                     Navigator.pop(context, Rules);
-                    
                   }, 
                   child: const Text("Save Tigger")
-                )
+                ),
               ],
             );
           });
           setState(() {
-             Rules = result;
+            Rules = result;
           });
         }, 
         icon: Icon(Icons.add)
