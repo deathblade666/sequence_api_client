@@ -2,10 +2,12 @@
 
 import 'dart:io';
 
+import 'package:Seqeunce_API_Client/utils/historyprovider.dart';
 import 'package:flutter/material.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:Seqeunce_API_Client/pages/home.dart';
 import 'package:path/path.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -17,7 +19,15 @@ void main() async {
     databaseFactory = databaseFactoryFfi;
   }
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  runApp(Seqeunce_API_Client(prefs));
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => HistoryProvider()..loadHistory()),
+      ],
+      child:Seqeunce_API_Client(prefs)
+    )
+  );
+  
   
 }
 

@@ -1,3 +1,4 @@
+import 'package:Seqeunce_API_Client/utils/history.dart';
 import 'package:Seqeunce_API_Client/utils/sequence_api.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -22,14 +23,21 @@ class DatabaseHelper {
     return await openDatabase(
       path,
       version: 1,
-      onCreate: (db, version) {
-        return db.execute('''
+      onCreate: (db, version) async {
+        await db.execute('''
           CREATE TABLE accounts(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
             type TEXT,
             balance REAL,
             hidden INTEGER
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            timestamp TEXT NOT NULL
           )
         ''');
       },
@@ -75,39 +83,53 @@ class DatabaseHelper {
 
   Future<void> printAllAccounts() async {
     final db = await database;
-    final results = await db.query('accounts');
+    final results = await db.query('history');
     for (var row in results) {
       print(row);
     }
   }
 
   Future<void> upsertAccountByName(SequenceAccount account) async {
-  final db = await database;
+    final db = await database;
 
-  // Check if account with same name exists
-  final existing = await db.query(
-    'accounts',
-    where: 'name = ?',
-    whereArgs: [account.name],
-  );
-
-  if (existing.isNotEmpty) {
-    // Update existing record
-    await db.update(
+    final existing = await db.query(
       'accounts',
-      account.toMap(),
       where: 'name = ?',
       whereArgs: [account.name],
     );
-  } else {
-    // Insert new record
-    await db.insert(
-      'accounts',
-      account.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+
+    if (existing.isNotEmpty) {
+      await db.update(
+        'accounts',
+        account.toMap(),
+        where: 'name = ?',
+        whereArgs: [account.name],
+      );
+    } else {
+      await db.insert(
+        'accounts',
+        account.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
   }
+
+
+  Future<void> insertHistory(HistoryItem item) async {
+  final db = await database;
+  await db.insert('history', item.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+}
+
+Future<List<HistoryItem>> getHistory() async {
+  final db = await database;
+  final maps = await db.query('history', orderBy: 'id DESC');
+  return maps.map((map) => HistoryItem.fromMap(map)).toList();
 }
 
 
+
+
+
 }
+
+
