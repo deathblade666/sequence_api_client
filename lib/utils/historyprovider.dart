@@ -21,5 +21,11 @@ class HistoryProvider with ChangeNotifier {
     await loadHistory(); // Refresh the list
   }
 
-  
+  Future<void> clearHistory() async {
+  final db = await DatabaseHelper().database;
+  await db.delete('history'); // clears all rows
+  _items = [];                // clears the in-memory list
+  notifyListeners();          // updates the UI
+}
+
 }

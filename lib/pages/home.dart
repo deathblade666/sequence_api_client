@@ -34,7 +34,14 @@ class _HomePageState extends State<HomePage> {
       child: Scaffold(
         drawer: Drawer(
           child: ExpansionTile(
-            title: const Text("History"),
+            initiallyExpanded: true,
+            trailing: IconButton(
+              icon: Icon(Icons.delete),
+              onPressed: (){
+                Provider.of<HistoryProvider>(context, listen: false).clearHistory();
+              },
+              ),
+            title: const Text("Rule History"),
             children: [
               SizedBox(
                 height: 750,
