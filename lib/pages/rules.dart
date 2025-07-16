@@ -1,6 +1,10 @@
+import 'package:Seqeunce_API_Client/utils/dbhelper.dart';
+import 'package:Seqeunce_API_Client/utils/history.dart';
+import 'package:Seqeunce_API_Client/utils/historyprovider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:Seqeunce_API_Client/utils/sequence_api.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TransferRules extends StatefulWidget {
@@ -38,6 +42,14 @@ class _TransferRulesState extends State<TransferRules>{
     }
   }
 
+  Future<void> debugHistory() async {
+  final historyItems = await DatabaseHelper().getHistory();
+  for (var item in historyItems) {
+    print('Name: ${item.name} at ${item.timestamp}');
+  }
+}
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -69,13 +81,14 @@ class _TransferRulesState extends State<TransferRules>{
                   ),
                 ),
                 TextButton(
-                  onPressed: (){
-                    //TODO: Store prompt values and save to prefs
+                  onPressed: ()async {
                     ruleId = _ruleController.text;
                     name = _nameController.text;
-                    widget.prefs.setString(name,ruleId);
+                    //TODO: Store prompt values and save to prefs
+                    
                     Rules.add(name);
                     print(Rules);
+                    
                     Navigator.pop(context, Rules);
                   }, 
                   child: const Text("Save Tigger")
@@ -96,9 +109,10 @@ class _TransferRulesState extends State<TransferRules>{
           return ListTile(
             title: Text(item ?? "Unknown"),
             trailing: Text('Last Ran\n$lastRan'),
-            onTap: (){
+            onTap: () async {
               //TODO: Run Rule Trigger API Event
               //SequenceApi.runTrigger(ruleId,apitoken);
+              Provider.of<HistoryProvider>(context, listen: false).addHistory('Rule $name');
               setState(() {
                 lastRan = DateFormat('yyyy-MM-dd hh:mma').format(DateTime.now());
               });

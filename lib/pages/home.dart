@@ -1,8 +1,11 @@
 import 'dart:io';
 
 import 'package:Seqeunce_API_Client/pages/accounts.dart';
+import 'package:Seqeunce_API_Client/utils/historyprovider.dart';
 import 'package:flutter/material.dart';
 import 'package:Seqeunce_API_Client/pages/utils/pagecontroller.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
@@ -18,6 +21,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final GlobalKey<AccountPageState> accountPageKey = GlobalKey<AccountPageState>();
+  
 
 
   @override
@@ -26,20 +30,41 @@ class _HomePageState extends State<HomePage> {
       child: Scaffold(
         drawer: Drawer(
           child: ExpansionTile(
-            title: const Text("History"),
+            initiallyExpanded: true,
+            trailing: IconButton(
+              icon: Icon(Icons.delete),
+              onPressed: (){
+                Provider.of<HistoryProvider>(context, listen: false).clearHistory();
+              },
+              ),
+            title: const Text("Rule History"),
             children: [
               SizedBox(
                 height: 750,
-                child: ListView.builder(                //TODO: Add items to list
-                  itemCount: 3,                         //TODO: Save List
-                  itemBuilder: (context, index){        //TODO: Restore List
-                    return ListTile(                    //TODO: Implement DB for storing History
-                      title: Text('${index +1}'),
+                child: Consumer<HistoryProvider>(
+                  builder: (context, historyProvider, _) {
+                    final history = historyProvider.items;
+                    if (history.isEmpty) {
+                      return const Center(child: Text("No history yet"));
+                    }
+
+                    return ListView.builder(
+                      itemCount: history.length,
+                      itemBuilder: (context, index) {
+                        final item = history[index];
+                        return ListTile(
+                          title: Text(item.name),
+                          subtitle: Text(
+                            DateFormat('yyyy-MM-dd hh:mm a')
+                            .format(DateTime.parse(item.timestamp)),
+                          ),
+                        );
+                      }
                     );
-                  }
+                  },
                 ),
-              )
-            ],
+              ),
+            ]
           )
         ),
         appBar: AppBar(
@@ -48,7 +73,7 @@ class _HomePageState extends State<HomePage> {
           actions: [
             if (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
               IconButton(
-                onPressed: () {
+                onPressed: () async {
                  accountPageKey.currentState?.refreshAccounts();
                 },
                 icon: Icon(Icons.refresh),
