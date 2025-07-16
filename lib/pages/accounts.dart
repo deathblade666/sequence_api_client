@@ -3,6 +3,11 @@ import 'package:intl/intl.dart';
 import 'package:Seqeunce_API_Client/utils/sequence_api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+
+//TODO: Implement a dialog to select which accounts to add to the page.
+//TODO: Save info to DB, and restore from DB by default
+
+
 class AccountPage extends StatefulWidget {
   AccountPage(this.prefs,{super.key});
   SharedPreferences prefs;

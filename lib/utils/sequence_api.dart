@@ -34,7 +34,9 @@ class SequenceApi{
         .toList();
       return accountList;
     } else {
-      throw Exception('\nInvalid or missing data in API response\nThis is likely due to an invalid or missing API token\nPlease press the settings button to add or review your token');
+      throw ApiDataException(
+        '\nInvalid or missing data in API response\nThis is likely due to an invalid or missing API token\nPlease press the settings button to add or review your token'
+      );
     }
   }
 }
@@ -52,4 +54,13 @@ class SequenceAccount {
       name: json['name'],
     );
   }
+}
+
+
+class ApiDataException implements Exception {
+  final String message;
+  ApiDataException(this.message);
+
+  @override
+  String toString() => message; // Removes "Exception:" prefix
 }

@@ -1,11 +1,12 @@
+import 'package:Seqeunce_API_Client/pages/customrules.dart';
 import 'package:flutter/material.dart';
 import 'package:Seqeunce_API_Client/pages/accounts.dart';
 import 'package:Seqeunce_API_Client/pages/rules.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Views extends StatefulWidget {
-  Views(this.prefs,{super.key, required homepageController});
-  final homepageController = PageController();
+  Views(this.prefs,this.homepageController,{super.key});
+  PageController homepageController;
   SharedPreferences prefs;
 
   @override
@@ -13,11 +14,10 @@ class Views extends StatefulWidget {
 }
 
 class _ViewsState extends State<Views> {
-  final homepageController = PageController();
 
   void initState(){
     super.initState();
-    homepageController.hasClients ? homepageController.jumpToPage(1) : homepageController.initialPage;
+    widget.homepageController.hasClients ? widget.homepageController.jumpToPage(1) : widget.homepageController.initialPage;
   }
 
   @override
@@ -26,11 +26,13 @@ class _ViewsState extends State<Views> {
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: SizedBox(
         height: 1020,
-        child: PageView(  //TODO: disabled scroll once bottom nuttons switch screens
-          controller: homepageController,
+        child: PageView(
+          controller: widget.homepageController,
+          physics: NeverScrollableScrollPhysics(),
           children: [
             AccountPage(widget.prefs),
-            TransferRules(widget.prefs)
+            TransferRules(widget.prefs),
+            CustomRules(widget.prefs)
           ],
         ),
       ),
