@@ -1,6 +1,9 @@
+import 'package:Seqeunce_API_Client/utils/dbhelper.dart';
+import 'package:Seqeunce_API_Client/utils/historyprovider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:Seqeunce_API_Client/utils/sequence_api.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CustomRules extends StatefulWidget {
@@ -38,6 +41,14 @@ class _CustomRulesState extends State<CustomRules>{
     }
   }
 
+  Future<void> debugHistory() async {
+  final historyItems = await DatabaseHelper().getHistory();
+  for (var item in historyItems) {
+    print('Name: ${item.name} at ${item.timestamp}');
+  }
+}
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -48,7 +59,7 @@ class _CustomRulesState extends State<CustomRules>{
               children: [
                 Padding(padding: EdgeInsetsGeometry.directional(top: 15)),
                 Center(
-                  child: const Text("Create Custom Rule"),
+                  child: const Text("Trigger a Rule"),
                 ),
                 Padding(
                   padding: EdgeInsetsGeometry.directional(start: 15, end: 15),
@@ -69,13 +80,14 @@ class _CustomRulesState extends State<CustomRules>{
                   ),
                 ),
                 TextButton(
-                  onPressed: (){
-                    //TODO: Store prompt values and save to prefs
+                  onPressed: ()async {
                     ruleId = _ruleController.text;
                     name = _nameController.text;
-                    widget.prefs.setString(name,ruleId);
+                    //TODO: Store prompt values and save to prefs
+                    
                     Rules.add(name);
                     print(Rules);
+                    
                     Navigator.pop(context, Rules);
                   }, 
                   child: const Text("Save Tigger")
@@ -96,9 +108,10 @@ class _CustomRulesState extends State<CustomRules>{
           return ListTile(
             title: Text(item ?? "Unknown"),
             trailing: Text('Last Ran\n$lastRan'),
-            onTap: (){
+            onTap: () async {
               //TODO: Run Rule Trigger API Event
               //SequenceApi.runTrigger(ruleId,apitoken);
+              Provider.of<HistoryProvider>(context, listen: false).addHistory('Rule $name');
               setState(() {
                 lastRan = DateFormat('yyyy-MM-dd hh:mma').format(DateTime.now());
               });
