@@ -80,7 +80,7 @@ class _TransferRulesState extends State<TransferRules>{
              Rules = result;
           });
         }, 
-        icon: Icon(Icons.add_box_outlined)
+        icon: Icon(Icons.add)
       ),
       body: ListView.builder(
         itemCount: Rules.length,

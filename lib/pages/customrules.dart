@@ -45,7 +45,7 @@ class _CustomRulesState extends State<CustomRules>{
         onPressed: () async {
           final result = await showDialog(context: context, builder: (BuildContext context){
             return AlertDialog(
-              title: const Text("Trigger a Rule"),
+              title: const Text("Trigger a transfer based on custom criteria"),
               actions: [
                 TextField(
                   controller: _nameController,
@@ -80,7 +80,7 @@ class _CustomRulesState extends State<CustomRules>{
              Rules = result;
           });
         }, 
-        icon: Icon(Icons.add_box_outlined)
+        icon: Icon(Icons.add)
       ),
       body: ListView.builder(
         itemCount: Rules.length,
