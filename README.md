@@ -1,6 +1,9 @@
-# Seqeunce_API_Client
+# Sequence API Client
+A third party app for intereacting with [Sequnce's](https://getsequence.io) API.
 
-A new Flutter project.
+Not affiliated with Sequence, just a user.
+
+Coming Soon!
 
 ## Getting Started
 
