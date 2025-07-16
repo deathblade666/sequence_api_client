@@ -1,3 +1,4 @@
+import 'package:Seqeunce_API_Client/utils/dbhelper.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:Seqeunce_API_Client/utils/sequence_api.dart';
@@ -27,14 +28,25 @@ class _AccountPageState extends State<AccountPage> {
   void initState() {
     super.initState();
     loadPrefs();
-    _accountFuture = SequenceApi.getAccounts(apitoken!);
+    _accountFuture = DatabaseHelper().getAccounts();
+
+    //_accountFuture = SequenceApi.getAccounts(apitoken!);
   }
 
+  
+
   Future<void> _refreshAccounts() async {
+    widget.prefs.setString('lastSync', DateTime.now().toIso8601String());
+    final accounts = await SequenceApi.getAccounts(apitoken!);
+    for (var account in accounts) {
+      await DatabaseHelper().upsertAccountByName(account); // Update or insert
+    }
+
     setState(() {
-      _accountFuture = SequenceApi.getAccounts(apitoken!);
+      _accountFuture = DatabaseHelper().getAccounts(); // Reload from DB
     });
   }
+
 
   void loadPrefs(){
     widget.prefs.reload();
@@ -139,15 +151,19 @@ class _AccountPageState extends State<AccountPage> {
               child: ListView.builder(
                 physics: AlwaysScrollableScrollPhysics(),
                 itemCount: snapshot.data!.length,
-                itemBuilder: (context, index) {
+                itemBuilder: (context, index)  {
                   final item = snapshot.data![index];
+                  final lastSyncString = widget.prefs.getString('lastSync');
+                  final lastSyncFormatted = lastSyncString != null
+                    ? DateFormat('yyyy-MM-dd hh:mma').format(DateTime.parse(lastSyncString))
+                    : 'Never';
                   return ListTile(
                     title: Text(item.name ?? 'Unnamed Account'),
                     subtitle: Text(
                       'Type: ${item.type ?? 'N/A'}\nBalance: \$${item.balance?.toStringAsFixed(2) ?? '0.00'}', 
                     ),
                     trailing: Text(
-                      "Last Sync\n${DateFormat('yyyy-MM-dd hh:mma').format(DateTime.now())}",
+                      "Last Sync\n$lastSyncFormatted",
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                   );

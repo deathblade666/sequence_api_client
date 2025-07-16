@@ -1,12 +1,21 @@
 // ignore_for_file: camel_case_types
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:Seqeunce_API_Client/pages/home.dart';
+import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
   SharedPreferences prefs = await SharedPreferences.getInstance();
   runApp(Seqeunce_API_Client(prefs));
   
