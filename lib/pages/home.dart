@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:Seqeunce_API_Client/pages/accounts.dart';
 import 'package:flutter/material.dart';
 import 'package:Seqeunce_API_Client/pages/utils/pagecontroller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,11 +10,15 @@ class HomePage extends StatefulWidget {
   SharedPreferences prefs;
   PageController homepageController = PageController();
 
+
+
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
+  final GlobalKey<AccountPageState> accountPageKey = GlobalKey<AccountPageState>();
+
 
   @override
   Widget build(BuildContext context) {
@@ -37,9 +44,18 @@ class _HomePageState extends State<HomePage> {
         ),
         appBar: AppBar(
           title: const Text("Sequence API Client"),
-          leading: DrawerButton()
+          leading: DrawerButton(),
+          actions: [
+            if (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
+              IconButton(
+                onPressed: () {
+                 accountPageKey.currentState?.refreshAccounts();
+                },
+                icon: Icon(Icons.refresh),
+              ),
+            ],
         ),
-        body: Views(widget.prefs,widget.homepageController),
+        body: Views(widget.prefs,widget.homepageController, accountPageKey: accountPageKey,),
         bottomNavigationBar: BottomAppBar(
           child: Row(
             children: [

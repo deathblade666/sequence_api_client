@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:Seqeunce_API_Client/utils/dbhelper.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -10,14 +12,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 
 class AccountPage extends StatefulWidget {
-  AccountPage(this.prefs,{super.key});
+  AccountPage(this.prefs,{Key? key}) : super(key: key);
   SharedPreferences prefs;
 
   @override
-  State<AccountPage> createState() => _AccountPageState();
+  AccountPageState createState() => AccountPageState();
 }
 
-class _AccountPageState extends State<AccountPage> {
+class AccountPageState extends State<AccountPage> {
   late Future<List<SequenceAccount>> _accountFuture;
     String? apitoken ="";
     bool obscure = true;
@@ -29,24 +31,19 @@ class _AccountPageState extends State<AccountPage> {
     super.initState();
     loadPrefs();
     _accountFuture = DatabaseHelper().getAccounts();
-
-    //_accountFuture = SequenceApi.getAccounts(apitoken!);
   }
 
-  
-
-  Future<void> _refreshAccounts() async {
+  Future<void> refreshAccounts() async {
     widget.prefs.setString('lastSync', DateTime.now().toIso8601String());
     final accounts = await SequenceApi.getAccounts(apitoken!);
     for (var account in accounts) {
-      await DatabaseHelper().upsertAccountByName(account); // Update or insert
+      await DatabaseHelper().upsertAccountByName(account);
     }
 
     setState(() {
-      _accountFuture = DatabaseHelper().getAccounts(); // Reload from DB
+      _accountFuture = DatabaseHelper().getAccounts();
     });
   }
-
 
   void loadPrefs(){
     widget.prefs.reload();
@@ -113,7 +110,7 @@ class _AccountPageState extends State<AccountPage> {
                                   Navigator.pop(context, apitoken);
                                 }, 
                                 child: Text("Save")
-                              )
+                              ),
                             ],
                           )
                         ],
@@ -129,7 +126,7 @@ class _AccountPageState extends State<AccountPage> {
             setState(() {
               apitoken = result;
             });
-            _refreshAccounts();
+            refreshAccounts();
           }
         },
         icon: Icon(
@@ -147,7 +144,7 @@ class _AccountPageState extends State<AccountPage> {
             return Center(child: Text('No items found'));
           } else {
             return RefreshIndicator(
-              onRefresh: _refreshAccounts,
+              onRefresh: refreshAccounts,
               child: ListView.builder(
                 physics: AlwaysScrollableScrollPhysics(),
                 itemCount: snapshot.data!.length,
