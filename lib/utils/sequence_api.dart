@@ -6,9 +6,21 @@ import 'package:sqflite/sqflite.dart';
 
 class SequenceApi{
 
-  //TODO: Create function to run Trigger API Event
   static runTrigger(String ruleId, String apitoken) async {
-    var uri = Uri.parse('https://api.getsequence.io/rule/$ruleId/tigger');
+    var uri = Uri.parse('https://api.getsequence.io/remote-api/rules/$ruleId/trigger');
+    var client = HttpClient();
+    var request = await client.postUrl(uri);
+    request.headers.contentType = ContentType('application', 'json');
+    request.headers.set('x-sequence-signature', 'Bearer $apitoken');
+    request.write(jsonEncode({}));
+    var response = await request.close();
+    var responseBody = await response.transform(utf8.decoder).join();
+    var jsonData = jsonDecode(responseBody);
+  }
+
+  static Future<List<SequenceAccount>> getAccounts(String apitoken) async {
+    final dbHelper = DatabaseHelper();
+    var uri = Uri.parse('https://api.getsequence.io/accounts');
     var client = HttpClient();
     var request = await client.postUrl(uri);
     request.headers.contentType = ContentType('application', 'json');
@@ -17,46 +29,26 @@ class SequenceApi{
     var response = await request.close();
     var responseBody = await response.transform(utf8.decoder).join();
     var jsonData = jsonDecode(responseBody);
-  }
-static Future<List<SequenceAccount>> getAccounts(String apitoken) async {
-  final dbHelper = DatabaseHelper(); // Get DB helper instance
 
-  var uri = Uri.parse('https://api.getsequence.io/accounts');
-  var client = HttpClient();
-  var request = await client.postUrl(uri);
-  request.headers.contentType = ContentType('application', 'json');
-  request.headers.set('x-sequence-access-token', 'Bearer $apitoken');
-  request.write(jsonEncode({}));
-  var response = await request.close();
-  var responseBody = await response.transform(utf8.decoder).join();
-  var jsonData = jsonDecode(responseBody);
-
-  if (jsonData != null &&
-      jsonData is Map &&
-      jsonData['data'] != null &&
-      jsonData['data']['balances'] != null) {
-    List<dynamic> balancesJson = jsonData['data']['balances'];
-
-    // Map to model
-    List<SequenceAccount> accountList = balancesJson
+    if (jsonData != null &&
+        jsonData is Map &&
+        jsonData['data'] != null &&
+        jsonData['data']['balances'] != null) {
+      List<dynamic> balancesJson = jsonData['data']['balances'];
+      List<SequenceAccount> accountList = balancesJson
         .map((data) => SequenceAccount.fromJson(data))
         .toList();
-
-    // ✅ Save each account to the database
-    for (var account in accountList) {
-      await dbHelper.upsertAccountByName(account);
+      for (var account in accountList) {
+        await dbHelper.upsertAccountByName(account);
+      }
+      List<SequenceAccount> allAccounts = await dbHelper.getAccounts();
+      return accountList;
+    } else {
+      throw ApiDataException(
+        '\nInvalid or missing data in API response\nThis is likely due to an invalid or missing API token\nPlease press the settings button to add or review your token',
+      );
     }
-
-
-    List<SequenceAccount> allAccounts = await dbHelper.getAccounts();
-    return accountList; // 🏁 Still return the full list
-  } else {
-    throw ApiDataException(
-      '\nInvalid or missing data in API response\nThis is likely due to an invalid or missing API token\nPlease press the settings button to add or review your token',
-    );
   }
-}
-
 }
 
 class SequenceAccount {
@@ -102,5 +94,5 @@ class ApiDataException implements Exception {
   ApiDataException(this.message);
 
   @override
-  String toString() => message; // Removes "Exception:" prefix
+  String toString() => message;
 }
