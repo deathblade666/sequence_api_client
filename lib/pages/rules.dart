@@ -60,6 +60,7 @@ class _TransferRulesState extends State<TransferRules>{
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       floatingActionButton: IconButton.filled(
         onPressed: () async {
           await showModalBottomSheet(context: context, builder: (BuildContext context){
@@ -97,26 +98,29 @@ class _TransferRulesState extends State<TransferRules>{
                     ),
                   ),
                 ),
-                TextButton(
-                  onPressed: () async {
-                    ruleId = _ruleController.text;
-                    name = _nameController.text;
-                    token = _tokencontroller.text;
-                    final db = await DatabaseHelper().database;
-                    await db.insert('rules', {
-                      'name': name,
-                      'ruleid': ruleId,
-                      'timestamp': 'Never',
-                      'token': token
-                    });
-                    await _loadRules();
-                    _nameController.clear();
-                    _ruleController.clear();
-                    _tokencontroller.clear();
-                    Navigator.pop(context);
-                  }, 
-                  child: const Text("Save Tigger")
-                ),
+                Padding(
+                  padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                  child: TextButton(
+                    onPressed: () async {
+                      ruleId = _ruleController.text;
+                      name = _nameController.text;
+                      token = _tokencontroller.text;
+                      final db = await DatabaseHelper().database;
+                      await db.insert('rules', {
+                        'name': name,
+                        'ruleid': ruleId,
+                        'timestamp': 'Never',
+                        'token': token
+                      });
+                      await _loadRules();
+                      _nameController.clear();
+                      _ruleController.clear();
+                      _tokencontroller.clear();
+                      Navigator.pop(context);
+                    }, 
+                    child: const Text("Save Tigger")
+                  ),
+                )
               ],
             );
           });
@@ -166,7 +170,7 @@ class _TransferRulesState extends State<TransferRules>{
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsetsGeometry.directional(start: 15, end: 15, bottom: 25),
+                        padding: EdgeInsetsGeometry.directional(start: 15, end: 15),
                         child: TextField(
                           controller: _tokencontroller,
                           decoration: InputDecoration(
@@ -174,7 +178,9 @@ class _TransferRulesState extends State<TransferRules>{
                           ),
                         ),
                       ),
-                      Row(
+                      Padding(
+                        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                        child: Row(
                         children: [
                           Spacer(flex: 1,),
                           TextButton(
@@ -225,15 +231,17 @@ class _TransferRulesState extends State<TransferRules>{
                           Spacer(flex: 1,),
                         ],
                       ),
+                      ),
+                      
                     ],
                   ),
                 );
               });
             },
             onTap: () async {
-              await SequenceApi.runTrigger(rule.ruleId, rule.token);
+              var statusCode = await SequenceApi.runTrigger(rule.ruleId, rule.token);
               Provider.of<HistoryProvider>(context, listen: false)
-              .addHistory('Ran rule ${rule.name}');
+              .addHistory("Ran rule ${rule.name} - $statusCode");
               final db = await DatabaseHelper().database;
               await db.update(
                 'rules',

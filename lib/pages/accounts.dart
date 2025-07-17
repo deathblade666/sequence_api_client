@@ -55,6 +55,7 @@ class AccountPageState extends State<AccountPage> {
   
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       floatingActionButton: IconButton.filled(
         onPressed: () async {
           final result = await showModalBottomSheet<String>(isScrollControlled: true ,showDragHandle: true ,context: context, builder: (BuildContext context) {
