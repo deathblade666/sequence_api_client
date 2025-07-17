@@ -1,4 +1,6 @@
+import 'package:Seqeunce_API_Client/utils/crules.dart';
 import 'package:Seqeunce_API_Client/utils/history.dart';
+import 'package:Seqeunce_API_Client/utils/rules.dart';
 import 'package:Seqeunce_API_Client/utils/sequence_api.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -35,6 +37,22 @@ class DatabaseHelper {
         ''');
         await db.execute('''
           CREATE TABLE history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            timestamp TEXT NOT NULL
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE rules (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            ruleid TEXT NOT NULL,
+            timestamp TEXT NOT NULL,
+            token TEXT NOT NULL
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE crules (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             timestamp TEXT NOT NULL
@@ -127,7 +145,42 @@ Future<List<HistoryItem>> getHistory() async {
 }
 
 
+Future<List<Rule>> getRules() async {
+  final db = await database;
+  final result = await db.query('rules', orderBy: 'id DESC');
+  return result.map((r) => Rule(
+    id: r['id'] as int?,
+    name: r['name'] as String,
+    ruleId: r['ruleid'] as String,
+    timestamp: r['timestamp'] as String,
+    token: r['token'] as String
+  )).toList();
+}
+Future<int> updateRule(Rule rule) async {
+  final db = await database;
+  return await db.update(
+    'rules',
+    {
+      'name': rule.name,
+      'ruleid': rule.ruleId,
+      'token': rule.token,
+      'timestamp': rule.timestamp,
+    },
+    where: 'id = ?',
+    whereArgs: [rule.id],
+  );
+}
 
+
+Future<List<Crules>> getCrules() async {
+  final db = await database;
+  final result = await db.query('Crules', orderBy: 'id DESC');
+  return result.map((r) => Crules(
+    id: r['id'] as int?,
+    name: r['name'] as String,
+    timestamp: r['timestamp'] as String,
+  )).toList();
+}
 
 
 }

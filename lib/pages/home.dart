@@ -13,16 +13,12 @@ class HomePage extends StatefulWidget {
   SharedPreferences prefs;
   PageController homepageController = PageController();
 
-
-
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
   final GlobalKey<AccountPageState> accountPageKey = GlobalKey<AccountPageState>();
-  
-
 
   @override
   Widget build(BuildContext context) {
@@ -36,33 +32,30 @@ class _HomePageState extends State<HomePage> {
               onPressed: (){
                 Provider.of<HistoryProvider>(context, listen: false).clearHistory();
               },
-              ),
+            ),
             title: const Text("Rule History"),
             children: [
               SizedBox(
                 height: 750,
-                child: Consumer<HistoryProvider>(
-                  builder: (context, historyProvider, _) {
-                    final history = historyProvider.items;
-                    if (history.isEmpty) {
-                      return const Center(child: Text("No history yet"));
+                child: Consumer<HistoryProvider>(builder: (context, historyProvider, _) {
+                  final history = historyProvider.items;
+                  if (history.isEmpty) {
+                    return const Center(child: Text("No history yet"));
+                  }
+                  return ListView.builder(
+                    itemCount: history.length,
+                    itemBuilder: (context, index) {
+                      final item = history[index];
+                      return ListTile(
+                        title: Text(item.name),
+                        subtitle: Text(
+                          DateFormat('yyyy-MM-dd hh:mm a')
+                          .format(DateTime.parse(item.timestamp)),
+                        ),
+                      );
                     }
-
-                    return ListView.builder(
-                      itemCount: history.length,
-                      itemBuilder: (context, index) {
-                        final item = history[index];
-                        return ListTile(
-                          title: Text(item.name),
-                          subtitle: Text(
-                            DateFormat('yyyy-MM-dd hh:mm a')
-                            .format(DateTime.parse(item.timestamp)),
-                          ),
-                        );
-                      }
-                    );
-                  },
-                ),
+                  );
+                }),
               ),
             ]
           )
@@ -78,7 +71,7 @@ class _HomePageState extends State<HomePage> {
                 },
                 icon: Icon(Icons.refresh),
               ),
-            ],
+          ],
         ),
         body: Views(widget.prefs,widget.homepageController, accountPageKey: accountPageKey,),
         bottomNavigationBar: BottomAppBar(
@@ -103,16 +96,15 @@ class _HomePageState extends State<HomePage> {
                 child: Text("Rules"),
               ),
               Spacer(),
-              TextButton(
+              /*TextButton(
                 onPressed: () {
                   setState(() {
                     widget.homepageController.hasClients ? widget.homepageController.jumpToPage(2) : widget.homepageController.initialPage;
                   });
-                  //TODO: Create List widget and prompt to define custom rules to run without needing to login to sequence
                 },
                 child: Text("Custom"),
                ),
-              Spacer()
+              Spacer()*/
             ],
           ),
         ),
