@@ -104,6 +104,7 @@ class AccountPageState extends State<AccountPage> {
                                     widget.prefs.remove("sequenceToken");
                                   }
                                   widget.prefs.setString("sequenceToken", apitoken);
+                                  refreshAccounts();
                                   Navigator.pop(context, apitoken);
                                 }, 
                                 child: Text("Save")
@@ -112,7 +113,6 @@ class AccountPageState extends State<AccountPage> {
                           )
                         ],
                       ),
-                      //TODO: History Toggle, hide Drawer when disabled
                     ],
                   ),
                 )
