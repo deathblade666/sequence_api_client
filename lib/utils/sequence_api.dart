@@ -16,6 +16,9 @@ class SequenceApi{
     var response = await request.close();
     var responseBody = await response.transform(utf8.decoder).join();
     var jsonData = jsonDecode(responseBody);
+    var statusCode = response.statusCode;
+    return statusCode;
+
   }
 
   static Future<List<SequenceAccount>> getAccounts(String apitoken) async {
