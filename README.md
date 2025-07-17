@@ -3,7 +3,22 @@ A third party app for intereacting with [Sequnce's](https://getsequence.io) API.
 
 Not affiliated with Sequence, just a user.
 
-Coming Soon!
+## Features
+- Query Account Balances
+- save api rule trigger path and secrets
+- run histroy for rules
+
+## Running Rules
+when you first setup your rule, you'll need the Ruleid, this is part of the path you receive when setting up the rule in sequence specifically the value between ``/rules/`` and ``/trigger``. just copy and paste that value into the ruleid field.
+
+## Screenshots (coming soon)
+
+## Build
+1. Setup a Flutter dev env
+2. Clone this repo
+3. cd into where you cloned the repo
+4. run ``flutter pub get``
+5. then ``flutter build <platform>``
 
 ## Getting Started
 
