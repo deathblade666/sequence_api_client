@@ -75,6 +75,7 @@ class AccountPageState extends State<AccountPage> {
       floatingActionButton: IconButton.filled(
         onPressed: () async {
           final result = await showModalBottomSheet<String>(isScrollControlled: true ,showDragHandle: true ,context: context, builder: (BuildContext context) {
+            Future<List<SequenceAccount>> hiddenAccountsFuture = DatabaseHelper().getHiddenAccounts();
             return StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
               return Padding(
                 padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
@@ -135,7 +136,7 @@ class AccountPageState extends State<AccountPage> {
                           title: const Text("Hidden Accounts"),
                           children: [
                             FutureBuilder<List<SequenceAccount>>(
-                              future: DatabaseHelper().getHiddenAccounts(),
+                              future: hiddenAccountsFuture,
                               builder: (context, snapshot) {
                                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
                                   return Text("No hidden accounts");
@@ -154,6 +155,9 @@ class AccountPageState extends State<AccountPage> {
                                           final updated = account.copyWith(hidden: false);
                                           await DatabaseHelper().upsertAccountByName(updated);
                                           await loadAccounts();
+                                          setState(() {
+                                            hiddenAccountsFuture = DatabaseHelper().getHiddenAccounts();
+                                          });
                                         },
                                       );
                                     },
