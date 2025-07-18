@@ -195,8 +195,8 @@ class AccountPageState extends State<AccountPage> {
             : 'Never';
             return Card(
               key: ValueKey(item.name),
-              margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              elevation: 3,
+              margin: EdgeInsets.symmetric(horizontal: 3, vertical: 3),
+              elevation: 2,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               child: ListTile(
                 leading: ReorderableDragStartListener(
