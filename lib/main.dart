@@ -1,5 +1,3 @@
-// ignore_for_file: camel_case_types
-
 import 'dart:io';
 
 import 'package:Seqeunce_API_Client/utils/historyprovider.dart';
@@ -8,7 +6,6 @@ import 'package:dynamic_color/dynamic_color.dart';
 import 'package:Seqeunce_API_Client/pages/home.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() async {

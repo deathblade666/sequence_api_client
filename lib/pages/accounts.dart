@@ -4,10 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:Seqeunce_API_Client/utils/sequence_api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
-//TODO: Implement a dialog to select which accounts to add to the page.
-
-
 class AccountPage extends StatefulWidget {
   AccountPage(this.prefs,{Key? key}) : super(key: key);
   SharedPreferences prefs;
@@ -17,32 +13,36 @@ class AccountPage extends StatefulWidget {
 }
 
 class AccountPageState extends State<AccountPage> {
-  late Future<List<SequenceAccount>> _accountFuture;
-    String? apitoken ="";
-    bool obscure = true;
-    String apiResponse = '';
-    TextEditingController token = TextEditingController();
+  List<SequenceAccount> _accounts = [];
+  String? apitoken = "";
+  bool obscure = true;
+  String apiResponse = '';
+  TextEditingController token = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     loadPrefs();
-    _accountFuture = DatabaseHelper().getAccounts();
+    loadAccounts();
+  }
+
+  Future<void> loadAccounts() async {
+    final accounts = await DatabaseHelper().getAccounts();
+    setState(() {
+      _accounts = accounts;
+    });
   }
 
   Future<void> refreshAccounts() async {
     widget.prefs.setString('lastSync', DateTime.now().toIso8601String());
-    final accounts = await SequenceApi.getAccounts(apitoken!);
-    for (var account in accounts) {
+    final accountsFromApi = await SequenceApi.getAccounts(apitoken!);
+    for (var account in accountsFromApi) {
       await DatabaseHelper().upsertAccountByName(account);
     }
-
-    setState(() {
-      _accountFuture = DatabaseHelper().getAccounts();
-    });
+    await loadAccounts();
   }
 
-  void loadPrefs(){
+  void loadPrefs() {
     widget.prefs.reload();
     String? sequence_api_token = widget.prefs.getString("sequenceToken");
     if (sequence_api_token != null) {
@@ -52,6 +52,22 @@ class AccountPageState extends State<AccountPage> {
       });
     }
   }
+
+  Future<void> updateOrderInDb() async {
+    for (int i = 0; i < _accounts.length; i++) {
+      await DatabaseHelper().updateAccountOrder(_accounts[i].name!, i);
+    }
+  }
+
+  void onReorder(int oldIndex, int newIndex) async {
+    setState(() {
+      if (newIndex > oldIndex) newIndex -= 1;
+      final item = _accounts.removeAt(oldIndex);
+      _accounts.insert(newIndex, item);
+    });
+    await updateOrderInDb();
+  }
+
   
   Widget build(BuildContext context) {
     return Scaffold(
@@ -114,6 +130,40 @@ class AccountPageState extends State<AccountPage> {
                           )
                         ],
                       ),
+                      Flexible( 
+                        child: ExpansionTile(
+                          title: const Text("Hidden Accounts"),
+                          children: [
+                            FutureBuilder<List<SequenceAccount>>(
+                              future: DatabaseHelper().getHiddenAccounts(),
+                              builder: (context, snapshot) {
+                                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                                  return Text("No hidden accounts");
+                                }
+                                return ConstrainedBox(
+                                  constraints: BoxConstraints(maxHeight: 350),
+                                  child: ListView.builder(
+                                    shrinkWrap: true,
+                                    itemCount: snapshot.data!.length,
+                                    itemBuilder: (context, index) {
+                                      final account = snapshot.data![index];
+                                      return CheckboxListTile(
+                                        title: Text(account.name ?? 'Unnamed'),
+                                        value: false,
+                                        onChanged: (val) async {
+                                          final updated = account.copyWith(hidden: false);
+                                          await DatabaseHelper().upsertAccountByName(updated);
+                                          await loadAccounts();
+                                        },
+                                      );
+                                    },
+                                  ),
+                                );
+                              },
+                            )
+                          ],
+                        ),
+                      )
                     ],
                   ),
                 )
@@ -131,43 +181,56 @@ class AccountPageState extends State<AccountPage> {
           Icons.settings
         )
       ),
-      body: FutureBuilder<List<SequenceAccount>>(
-        future: _accountFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No items found'));
-          } else {
-            return RefreshIndicator(
-              onRefresh: refreshAccounts,
-              child: ListView.builder(
-                physics: AlwaysScrollableScrollPhysics(),
-                itemCount: snapshot.data!.length,
-                itemBuilder: (context, index)  {
-                  final item = snapshot.data![index];
-                  final lastSyncString = widget.prefs.getString('lastSync');
-                  final lastSyncFormatted = lastSyncString != null
-                    ? DateFormat('yyyy-MM-dd hh:mma').format(DateTime.parse(lastSyncString))
-                    : 'Never';
-                  return ListTile(
-                    title: Text(item.name ?? 'Unnamed Account'),
-                    subtitle: Text(
-                      'Type: ${item.type ?? 'N/A'}\nBalance: \$${item.balance?.toStringAsFixed(2) ?? '0.00'}', 
-                    ),
-                    trailing: Text(
-                      "Last Sync\n$lastSyncFormatted",
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+      body: RefreshIndicator(
+        onRefresh: refreshAccounts,
+        child: ReorderableListView.builder(
+          buildDefaultDragHandles: false,
+          itemCount: _accounts.length,
+          onReorder: onReorder,
+          itemBuilder: (context, index) {
+            final item = _accounts[index];
+            final lastSyncString = widget.prefs.getString('lastSync');
+            final lastSyncFormatted = lastSyncString != null
+            ? DateFormat('yyyy-MM-dd hh:mma').format(DateTime.parse(lastSyncString))
+            : 'Never';
+            return ListTile(
+              key: ValueKey(item.name),
+              leading: ReorderableDragStartListener(
+                index: index,
+                child: Icon(Icons.drag_handle),
+              ),
+              title: Text(item.name ?? 'Unnamed Account'),
+              subtitle: Text(
+                'Type: ${item.type ?? 'N/A'}\nBalance: \$${item.balance?.toStringAsFixed(2) ?? '0.00'}',
+              ),
+              trailing: Text(
+                "Last Sync\n$lastSyncFormatted",
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
+              onLongPress: () {
+                showModalBottomSheet( context: context, builder: (context) {
+                  return SizedBox(
+                    height: 100,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 30, bottom: 30),
+                      child: ListTile(
+                        title: Text("Hide ${item.name}?"),
+                        trailing: Icon(Icons.visibility_off),
+                        onTap: () async {
+                          final updated = item.copyWith(hidden: true);
+                          await DatabaseHelper().upsertAccountByName(updated);
+                          await loadAccounts();
+                          Navigator.pop(context);
+                        },
+                      ),
                     ),
                   );
-                },
-              ),
+                });
+              },
             );
           }
-        },
-      )
+        ),
+      ),
     );
   }
 }

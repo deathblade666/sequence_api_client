@@ -1,4 +1,3 @@
-import 'package:Seqeunce_API_Client/pages/customrules.dart';
 import 'package:flutter/material.dart';
 import 'package:Seqeunce_API_Client/pages/accounts.dart';
 import 'package:Seqeunce_API_Client/pages/rules.dart';
@@ -34,7 +33,6 @@ class _ViewsState extends State<Views> {
           children: [
             AccountPage(widget.prefs, key: widget.accountPageKey,),
             TransferRules(widget.prefs),
-            CustomRules(widget.prefs)
           ],
         ),
       ),
