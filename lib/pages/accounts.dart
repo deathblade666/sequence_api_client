@@ -130,34 +130,39 @@ class AccountPageState extends State<AccountPage> {
                           )
                         ],
                       ),
-                      ExpansionTile(
-                        title: const Text("Hidden Accounts"),
-                        children: [
-                          FutureBuilder<List<SequenceAccount>>(
-                            future: DatabaseHelper().getHiddenAccounts(),
-                            builder: (context, snapshot) {
-                              if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                                return Text("No hidden accounts");
-                              }
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  ...snapshot.data!.map((account) {
-                                    return CheckboxListTile(
-                                      title: Text(account.name ?? 'Unnamed'),
-                                      value: false,
-                                      onChanged: (val) async {
-                                        final updated = account.copyWith(hidden: false);
-                                        await DatabaseHelper().upsertAccountByName(updated);
-                                        await loadAccounts();
-                                      },
-                                    );
-                                  }).toList(),
-                                ],
-                              );
-                            },
-                          )
-                        ],
+                      Flexible( 
+                        child: ExpansionTile(
+                          title: const Text("Hidden Accounts"),
+                          children: [
+                            FutureBuilder<List<SequenceAccount>>(
+                              future: DatabaseHelper().getHiddenAccounts(),
+                              builder: (context, snapshot) {
+                                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                                  return Text("No hidden accounts");
+                                }
+                                return ConstrainedBox(
+                                  constraints: BoxConstraints(maxHeight: 350),
+                                  child: ListView.builder(
+                                    shrinkWrap: true,
+                                    itemCount: snapshot.data!.length,
+                                    itemBuilder: (context, index) {
+                                      final account = snapshot.data![index];
+                                      return CheckboxListTile(
+                                        title: Text(account.name ?? 'Unnamed'),
+                                        value: false,
+                                        onChanged: (val) async {
+                                          final updated = account.copyWith(hidden: false);
+                                          await DatabaseHelper().upsertAccountByName(updated);
+                                          await loadAccounts();
+                                        },
+                                      );
+                                    },
+                                  ),
+                                );
+                              },
+                            )
+                          ],
+                        ),
                       )
                     ],
                   ),
