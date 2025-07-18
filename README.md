@@ -13,6 +13,14 @@ when you first setup your rule, you'll need the Ruleid, this is part of the path
 
 ## Screenshots (coming soon)
 
+|Accounts|Rules|History|
+|--|--|--|
+|![alt](https://github.com/deathblade666/sequence_api_client/blob/b255a54c600fabc4506bf9492b39eefa9dbf8816/screenshots/Screenshot%20From%202025-07-18%2015-17-32.png)|![alt](https://github.com/deathblade666/sequence_api_client/blob/b255a54c600fabc4506bf9492b39eefa9dbf8816/screenshots/Screenshot%20From%202025-07-18%2015-18-44.png)|![alt](https://github.com/deathblade666/sequence_api_client/blob/b255a54c600fabc4506bf9492b39eefa9dbf8816/screenshots/Screenshot%20From%202025-07-18%2015-18-54.png)|
+
+|Settings|Rule Settings|
+|--|--|
+|![alt](https://github.com/deathblade666/sequence_api_client/blob/b255a54c600fabc4506bf9492b39eefa9dbf8816/screenshots/Screenshot%20From%202025-07-18%2015-18-14.png)|![alt](https://github.com/deathblade666/sequence_api_client/blob/b255a54c600fabc4506bf9492b39eefa9dbf8816/screenshots/Screenshot%20From%202025-07-18%2015-18-02.png)|
+
 ## Build
 1. Setup a Flutter dev env
 2. Clone this repo
