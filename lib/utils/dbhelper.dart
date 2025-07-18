@@ -24,7 +24,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE accounts(
@@ -49,19 +49,28 @@ class DatabaseHelper {
             name TEXT NOT NULL,
             ruleid TEXT NOT NULL,
             timestamp TEXT NOT NULL,
-            token TEXT NOT NULL
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE crules (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            timestamp TEXT NOT NULL
+            token TEXT NOT NULL,
+            order_index INTEGER DEFAULT 0
           )
         ''');
       },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute('''
+            ALTER TABLE rules ADD COLUMN order_index INTEGER DEFAULT 0
+          ''');
+          final rules = await db.query('rules', orderBy: 'id ASC');
+          for (int i = 0; i < rules.length; i++) {
+            await db.update(
+              'rules',
+              {'order_index': i},
+              where: 'id = ?',
+              whereArgs: [rules[i]['id']],
+            );
+          }
+        }
+      },
     );
-    
   }
 
   Future<int> insertAccount(SequenceAccount account) async {
@@ -82,7 +91,6 @@ class DatabaseHelper {
     );
     return maps.map((map) => SequenceAccount.fromMap(map)).toList();
   }
-
 
   Future<int> updateAccount(SequenceAccount account) async {
     final db = await database;
@@ -119,58 +127,54 @@ class DatabaseHelper {
       whereArgs: [account.name],
     );
 
-  if (existing.isNotEmpty) {
-    final existingOrder = existing.first['order_index'] as int? ?? 0;
+    if (existing.isNotEmpty) {
+      final existingOrder = existing.first['order_index'] as int? ?? 0;
 
+      await db.update(
+        'accounts',
+        {
+          ...account.toMap(),
+          'order_index': existingOrder,
+        },
+        where: 'name = ?',
+        whereArgs: [account.name],
+      );
+      print("Upserted ${account.name} with preserved order_index $existingOrder");
+
+    } else {
+      final maxOrderResult = await db.rawQuery('SELECT MAX(order_index) as max_order FROM accounts');
+      final maxOrder = maxOrderResult.first['max_order'] as int? ?? 0;
+
+      await db.insert(
+        'accounts',
+        {
+          ...account.toMap(),
+          'order_index': maxOrder + 1,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+  }
+
+  Future<List<SequenceAccount>> getHiddenAccounts() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'accounts',
+      where: 'hidden = 1',
+      orderBy: 'order_index ASC',
+    );
+    return maps.map((map) => SequenceAccount.fromMap(map)).toList();
+  }
+
+  Future<void> updateAccountOrder(String name, int newOrder) async {
+    final db = await database;
     await db.update(
       'accounts',
-      {
-        ...account.toMap(),
-        'order_index': existingOrder,
-      },
+      {'order_index': newOrder},
       where: 'name = ?',
-      whereArgs: [account.name],
+      whereArgs: [name],
     );
-    print("Upserted ${account.name} with preserved order_index $existingOrder");
-
-  } else {
-    final maxOrderResult = await db.rawQuery('SELECT MAX(order_index) as max_order FROM accounts');
-    final maxOrder = maxOrderResult.first['max_order'] as int? ?? 0;
-
-    await db.insert(
-      'accounts',
-      {
-        ...account.toMap(),
-        'order_index': maxOrder + 1,
-        
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-      
-    );
-    
   }
-}
-
-Future<List<SequenceAccount>> getHiddenAccounts() async {
-  final db = await database;
-  final List<Map<String, dynamic>> maps = await db.query(
-    'accounts',
-    where: 'hidden = 1',
-    orderBy: 'order_index ASC',
-  );
-  return maps.map((map) => SequenceAccount.fromMap(map)).toList();
-}
-
-
-Future<void> updateAccountOrder(String name, int newOrder) async {
-  final db = await database;
-  await db.update(
-    'accounts',
-    {'order_index': newOrder},
-    where: 'name = ?',
-    whereArgs: [name],
-  );
-}
 
   Future<void> insertHistory(HistoryItem item) async {
     final db = await database;
@@ -183,16 +187,16 @@ Future<void> updateAccountOrder(String name, int newOrder) async {
     return maps.map((map) => HistoryItem.fromMap(map)).toList();
   }
 
-
   Future<List<Rule>> getRules() async {
     final db = await database;
-    final result = await db.query('rules', orderBy: 'id DESC');
+    final result = await db.query('rules', orderBy: 'order_index ASC');
     return result.map((r) => Rule(
       id: r['id'] as int?,
       name: r['name'] as String,
       ruleId: r['ruleid'] as String,
       timestamp: r['timestamp'] as String,
-      token: r['token'] as String
+      token: r['token'] as String,
+      orderIndex: r['order_index'] as int? ?? 0,
     )).toList();
   }
 
@@ -205,11 +209,20 @@ Future<void> updateAccountOrder(String name, int newOrder) async {
         'ruleid': rule.ruleId,
         'token': rule.token,
         'timestamp': rule.timestamp,
+        'order_index': rule.orderIndex,
       },
       where: 'id = ?',
       whereArgs: [rule.id],
     );
   }
+
+  Future<void> updateRuleOrder(int? ruleId, int newOrder) async {
+    final db = await database;
+    await db.update(
+      'rules',
+      {'order_index': newOrder},
+      where: 'id = ?',
+      whereArgs: [ruleId],
+    );
+  }
 }
-
-

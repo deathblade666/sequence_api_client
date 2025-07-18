@@ -43,12 +43,25 @@ class _TransferRulesState extends State<TransferRules>{
     _loadRules();
   }
 
-    Future<void> _loadRules() async {
-      final ruleList = await DatabaseHelper().getRules();
-      setState(() {
-        rules = ruleList;
-      });
+  Future<void> _loadRules() async {
+    final ruleList = await DatabaseHelper().getRules();
+    setState(() {
+      rules = ruleList;
+    });
+  }
+
+  Future<void> _onReorder(int oldIndex, int newIndex) async {
+    setState(() {
+      if (newIndex > oldIndex) {
+        newIndex -= 1;
+      }
+      final rule = rules.removeAt(oldIndex);
+      rules.insert(newIndex, rule);
+    });
+    for (int i = 0; i < rules.length; i++) {
+      await DatabaseHelper().updateRuleOrder(rules[i].id, i);
     }
+  }
 
   Future<void> debugHistory() async {
     final historyItems = await DatabaseHelper().getHistory();
@@ -106,11 +119,14 @@ class _TransferRulesState extends State<TransferRules>{
                       name = _nameController.text;
                       token = _tokencontroller.text;
                       final db = await DatabaseHelper().database;
+                      final maxOrderResult = await db.rawQuery('SELECT MAX(order_index) as max_order FROM rules');
+                      final maxOrder = maxOrderResult.first['max_order'] as int? ?? -1;
                       await db.insert('rules', {
                         'name': name,
                         'ruleid': ruleId,
                         'timestamp': 'Never',
-                        'token': token
+                        'token': token,
+                        'order_index': maxOrder + 1,
                       });
                       await _loadRules();
                       _nameController.clear();
@@ -118,7 +134,7 @@ class _TransferRulesState extends State<TransferRules>{
                       _tokencontroller.clear();
                       Navigator.pop(context);
                     }, 
-                    child: const Text("Save Tigger")
+                    child: const Text("Save Trigger")
                   ),
                 )
               ],
@@ -127,16 +143,29 @@ class _TransferRulesState extends State<TransferRules>{
         }, 
         icon: Icon(Icons.add)
       ),
-      body: ListView.builder(
+      body: ReorderableListView.builder(
+        buildDefaultDragHandles: false,
+        onReorder: _onReorder,
         itemCount: rules.length,
         itemBuilder: (context, index) {
           final rule = rules[index];
           return ListTile(
+            key: Key(rule.id.toString()),
+            leading: ReorderableDragStartListener(
+                index: index,
+                child: Icon(Icons.drag_handle),
+              ),
             title: Text(rule.name),
-            trailing: Text(
-              rule.timestamp == 'Never' || rule.timestamp.isEmpty
-              ? 'Last Ran\nNever'
-                : 'Last Ran\n${DateFormat('MM/dd hh:mma').format(DateTime.parse(rule.timestamp))}',
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                
+                Text(
+                  rule.timestamp == 'Never' || rule.timestamp.isEmpty
+                  ? 'Last Ran\nNever'
+                    : 'Last Ran\n${DateFormat('MM/dd hh:mma').format(DateTime.parse(rule.timestamp))}',
+                ),
+              ],
             ),
             onLongPress: () {
               _nameController.text = rule.name;
