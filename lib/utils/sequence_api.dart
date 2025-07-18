@@ -39,16 +39,28 @@ class SequenceApi{
       List<dynamic> balancesJson = jsonData['data']['balances'];
       List<SequenceAccount> accountList = [];
       final existingAccounts = await dbHelper.getAccounts();
+      final hiddenAccounts = await dbHelper.getHiddenAccounts();
+      final allExistingAccounts = [...existingAccounts, ...hiddenAccounts];
       final orderMap = {
         for (var acc in existingAccounts)
           acc.name: acc.orderIndex ?? 0,
       };
+      final hiddenMap = {
+        for (var acc in allExistingAccounts)
+          acc.name: acc.hidden ?? false,
+      };
       for (var data in balancesJson) {
         final name = data['name'];
         final preservedOrder = orderMap[name] ?? orderMap.length;
-        final account = SequenceAccount.fromJson(data).copyWith(orderIndex: preservedOrder);
+        final preservedHidden = hiddenMap[name] ?? false;
+        final account = SequenceAccount.fromJson(data).copyWith(
+          orderIndex: preservedOrder,
+          hidden: preservedHidden,
+        );
         await dbHelper.upsertAccountByName(account);
-        accountList.add(account);
+        if (!preservedHidden) {
+          accountList.add(account);
+        }
       }
       return accountList;
     } else {
