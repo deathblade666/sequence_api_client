@@ -97,15 +97,6 @@ class _HomePageState extends State<HomePage> {
                 child: Text("Rules"),
               ),
               Spacer(),
-              /*TextButton(
-                onPressed: () {
-                  setState(() {
-                    widget.homepageController.hasClients ? widget.homepageController.jumpToPage(2) : widget.homepageController.initialPage;
-                  });
-                },
-                child: Text("Custom"),
-               ),
-              Spacer()*/
             ],
           ),
         ),
