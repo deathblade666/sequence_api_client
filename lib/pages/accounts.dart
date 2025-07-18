@@ -89,7 +89,7 @@ class AccountPageState extends State<AccountPage> {
                         children: [
                           Row(
                             children: [
-                                Flexible(
+                              Flexible(
                                 child: Padding(
                                   padding: EdgeInsetsGeometry.directional(start: 15),
                                   child: TextField(
