@@ -1,7 +1,11 @@
 # Sequence API Client
+
 A third party app for intereacting with [Sequnce's](https://getsequence.io) API.
 
 Not affiliated with Sequence, just a user.
+
+## Requirements
+You must have API access enabled on your account, if you do not have it then reach out to Sequence support to enable access!
 
 ## Features
 - Query Account Balances
