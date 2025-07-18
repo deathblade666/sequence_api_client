@@ -26,18 +26,23 @@ class _HomePageState extends State<HomePage> {
       child: Scaffold(
         resizeToAvoidBottomInset: true,
         drawer: Drawer(
-          child: ExpansionTile(
-            initiallyExpanded: true,
-            trailing: IconButton(
-              icon: Icon(Icons.delete),
-              onPressed: (){
-                Provider.of<HistoryProvider>(context, listen: false).clearHistory();
-              },
-            ),
-            title: const Text("Rule History"),
+          child: Column(
             children: [
-              SizedBox(
-                height: 750,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Spacer(flex: 1,),
+                  const Text("Rule History"),
+                  Spacer(flex: 1,),
+                  IconButton(
+                    icon: Icon(Icons.delete),
+                    onPressed: (){
+                      Provider.of<HistoryProvider>(context, listen: false).clearHistory();
+                    },
+                  ),
+                ],
+              ),
+              Expanded(
                 child: Consumer<HistoryProvider>(builder: (context, historyProvider, _) {
                   final history = historyProvider.items;
                   if (history.isEmpty) {
