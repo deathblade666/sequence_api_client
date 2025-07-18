@@ -18,7 +18,7 @@ when you first setup your rule, you'll need the Ruleid, this is part of the path
 |![alt](https://github.com/deathblade666/sequence_api_client/blob/b255a54c600fabc4506bf9492b39eefa9dbf8816/screenshots/Screenshot%20From%202025-07-18%2015-17-32.png)|![alt](https://github.com/deathblade666/sequence_api_client/blob/b255a54c600fabc4506bf9492b39eefa9dbf8816/screenshots/Screenshot%20From%202025-07-18%2015-18-44.png)|![alt](https://github.com/deathblade666/sequence_api_client/blob/b255a54c600fabc4506bf9492b39eefa9dbf8816/screenshots/Screenshot%20From%202025-07-18%2015-18-54.png)|
 
 |Settings|Rule Settings|Edit Rules|
-|--|--|
+|--|--|--|
 |![alt](https://github.com/deathblade666/sequence_api_client/blob/b255a54c600fabc4506bf9492b39eefa9dbf8816/screenshots/Screenshot%20From%202025-07-18%2015-18-14.png)|![alt](https://github.com/deathblade666/sequence_api_client/blob/b255a54c600fabc4506bf9492b39eefa9dbf8816/screenshots/Screenshot%20From%202025-07-18%2015-18-02.png)|![alt](https://github.com/deathblade666/sequence_api_client/blob/b1ec15901fac05a82d58f7300bd76113268dd0e7/screenshots/Screenshot%20From%202025-07-18%2015-25-56.png)|
 
 ## Build
