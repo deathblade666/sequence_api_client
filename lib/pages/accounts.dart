@@ -149,7 +149,7 @@ class AccountPageState extends State<AccountPage> {
                                   return Text("No hidden accounts");
                                 }
                                 return ConstrainedBox(
-                                  constraints: BoxConstraints(maxHeight: 325),
+                                  constraints: BoxConstraints(maxHeight: 270),
                                   child: ListView.builder(
                                     shrinkWrap: true,
                                     itemCount: snapshot.data!.length,
