@@ -89,12 +89,19 @@ class AccountPageState extends State<AccountPage> {
                         children: [
                           Row(
                             children: [
-                              SizedBox(
-                                width: 400,
-                                height: 80,
+                                Flexible(
                                 child: Padding(
                                   padding: EdgeInsetsGeometry.directional(start: 15),
                                   child: TextField(
+                                    onSubmitted: (value) {
+                                      String apitoken = value;
+                                      if (apitoken == ""){
+                                        widget.prefs.remove("sequenceToken");
+                                      }
+                                      widget.prefs.setString("sequenceToken", apitoken);
+                                      refreshAccounts();
+                                      Navigator.pop(context, apitoken);
+                                    },
                                     controller: token,
                                     decoration: InputDecoration(
                                       suffix: IconButton(
