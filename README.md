@@ -15,7 +15,7 @@ You must have API access enabled on your account, if you do not have it then rea
 ## Running Rules
 when you first setup your rule, you'll need the Ruleid, this is part of the path you receive when setting up the rule in sequence specifically the value between ``/rules/`` and ``/trigger``. just copy and paste that value into the ruleid field.
 
-## Screenshots (coming soon)
+## Screenshots
 
 |Accounts|Rules|History|
 |--|--|--|
