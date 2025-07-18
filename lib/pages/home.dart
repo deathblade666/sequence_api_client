@@ -19,6 +19,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final GlobalKey<AccountPageState> accountPageKey = GlobalKey<AccountPageState>();
+  String pageName = "Accounts";
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +68,7 @@ class _HomePageState extends State<HomePage> {
           )
         ),
         appBar: AppBar(
-          title: const Text("Sequence API Client"),
+          title: Text(pageName),
           leading: DrawerButton(),
           actions: [
             if (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
@@ -88,15 +89,17 @@ class _HomePageState extends State<HomePage> {
                 onPressed: () {
                   setState(() {
                     widget.homepageController.hasClients ? widget.homepageController.jumpToPage(0) : widget.homepageController.initialPage;
+                    pageName = "Accounts";
                   });
                 },
-                child: Text("Home"),
+                child: Text("Accounts"),
               ),
               Spacer(),
               TextButton(
                 onPressed: () {
                   setState(() {
                     widget.homepageController.hasClients ? widget.homepageController.jumpToPage(1) : widget.homepageController.initialPage;
+                    pageName = "Rules";
                   });
                 },
                 child: Text("Rules"),
