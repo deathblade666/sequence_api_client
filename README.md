@@ -8,9 +8,15 @@ Not affiliated with Sequence, just a user.
 You must have API access enabled on your account, if you do not have it then reach out to Sequence support to enable access!
 
 ## Features
-- Query Account Balances
-- save api rule trigger path and secrets
-- run histroy for rules
+- Balances Query
+  - Receives and store all account balances provided by the API.
+  - Data includes Balance, Account name (as shown in Sequene), and account type (pod, income source, or account).
+- Rules
+  - Create Rule Triggers to manually initiate rules setup in Sequence.
+  - Rule secrets and paths are saved for easy reference and modification.
+- History
+  - Keeps historical records of the Rules you've run from within the app.
+  - History log shows the http status code returned by the api.
 
 ## Running Rules
 when you first setup your rule, you'll need the Ruleid, this is part of the path you receive when setting up the rule in sequence specifically the value between ``/rules/`` and ``/trigger``. just copy and paste that value into the ruleid field.
