@@ -151,8 +151,8 @@ class _TransferRulesState extends State<TransferRules>{
           final rule = rules[index];
           return Card(
               key: Key(rule.id.toString()),
-              margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              elevation: 3,
+              margin: EdgeInsets.symmetric(horizontal: 3, vertical: 3),
+              elevation: 2,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               child: ListTile(
 
@@ -262,7 +262,7 @@ class _TransferRulesState extends State<TransferRules>{
                             }, 
                             child: Text("Save") 
                           ),
-                          Spacer(flex: 1,),
+                          //Spacer(flex: 1,),
                         ],
                       ),
                       ),
