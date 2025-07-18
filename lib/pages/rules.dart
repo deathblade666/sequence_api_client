@@ -149,8 +149,13 @@ class _TransferRulesState extends State<TransferRules>{
         itemCount: rules.length,
         itemBuilder: (context, index) {
           final rule = rules[index];
-          return ListTile(
-            key: Key(rule.id.toString()),
+          return Card(
+              key: Key(rule.id.toString()),
+              margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              elevation: 3,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              child: ListTile(
+
             leading: ReorderableDragStartListener(
                 index: index,
                 child: Icon(Icons.drag_handle),
@@ -284,6 +289,7 @@ class _TransferRulesState extends State<TransferRules>{
                 lastRan = DateFormat('yyyy-MM-dd hh:mma').format(DateTime.now());
               });
             },
+              )
           );
         },
       ),
