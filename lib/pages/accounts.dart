@@ -3,11 +3,9 @@ import 'package:Seqeunce_API_Client/utils/secretservice.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:Seqeunce_API_Client/utils/sequence_api.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class AccountPage extends StatefulWidget {
-  AccountPage(this.prefs,{Key? key}) : super(key: key);
-  SharedPreferences prefs;
+  AccountPage({Key? key}) : super(key: key);
 
   @override
   AccountPageState createState() => AccountPageState();
@@ -19,12 +17,12 @@ class AccountPageState extends State<AccountPage> {
   bool obscure = true;
   String apiResponse = '';
   TextEditingController token = TextEditingController();
-  final secretService = SecretService();
+  final secretService = SecretService.instance;
 
   @override
   void initState() {
     super.initState();
-    //loadPrefs();
+    loadPrefs();
     loadAccounts();
   }
 
@@ -36,19 +34,20 @@ class AccountPageState extends State<AccountPage> {
   }
 
   Future<void> refreshAccounts() async {
-    widget.prefs.setString('lastSync', DateTime.now().toIso8601String());
-    final secretService = SecretService();
     final token = await secretService.getToken();
     if (token == null || token.isEmpty) {
       print("No token found — skipping account refresh.");
       return;
     }
+    final now = DateTime.now().toIso8601String();
     final accountsFromApi = await SequenceApi.getAccounts(token);
     for (var account in accountsFromApi) {
-      await DatabaseHelper().upsertAccountByName(account);
+      final updatedAccount = account.copyWith(lastsync: now);
+      await DatabaseHelper().upsertAccountByName(updatedAccount);
     }
     await loadAccounts();
   }
+
 
 
   void loadPrefs() async {
@@ -210,7 +209,7 @@ class AccountPageState extends State<AccountPage> {
           onReorder: onReorder,
           itemBuilder: (context, index) {
             final item = _accounts[index];
-            final lastSyncString = widget.prefs.getString('lastSync');
+            final lastSyncString = item.lastsync;
             final lastSyncFormatted = lastSyncString != null
             ? DateFormat('yyyy-MM-dd hh:mma').format(DateTime.parse(lastSyncString))
             : 'Never';

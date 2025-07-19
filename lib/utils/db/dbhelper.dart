@@ -5,7 +5,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class DatabaseHelper {
-  static const int _version = 3;
+  static const int _version = 4;
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   factory DatabaseHelper() => _instance;
   DatabaseHelper._internal();
@@ -33,7 +33,8 @@ class DatabaseHelper {
             type TEXT,
             balance REAL,
             hidden INTEGER,
-            order_index INTEGER
+            order_index INTEGER,
+            lastsync TEXT
           )
         ''');
         await db.execute('''
@@ -82,6 +83,11 @@ class DatabaseHelper {
               secret TEXT NOT NULL
             )
        ''');
+        }
+        if (oldVersion < 4) {
+          await db.execute('''
+          ALTER TABLE accounts ADD COLUMN lastsync TEXT DEFAULT NULL
+          ''');
         }
       }
     );

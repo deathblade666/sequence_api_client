@@ -4,11 +4,9 @@ import 'package:Seqeunce_API_Client/utils/sequence_api.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class TransferRules extends StatefulWidget {
-  TransferRules(this.prefs,{super.key});
-  SharedPreferences prefs;
+  TransferRules({super.key});
 
 @override
 State<TransferRules> createState() => _TransferRulesState();
@@ -28,18 +26,6 @@ class _TransferRulesState extends State<TransferRules>{
   @override
   void initState(){
     super.initState();
-    loadPrefs();
-  }
-
-  void loadPrefs(){
-    widget.prefs.reload();
-    String? sequence_api_token = widget.prefs.getString("sequenceToken");
-    widget.prefs.getString(name);
-    if (sequence_api_token != null) {
-      setState(() {
-        apitoken = sequence_api_token;
-      });
-    }
     _loadRules();
   }
 

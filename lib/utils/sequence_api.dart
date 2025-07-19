@@ -78,6 +78,7 @@ class SequenceAccount {
   final bool? hidden;
   final int? id;
   final int? orderIndex;
+  final String? lastsync;
 
   SequenceAccount({
     required this.balance,
@@ -86,6 +87,7 @@ class SequenceAccount {
     this.hidden,
     this.id,
     this.orderIndex,
+    this.lastsync
   });
 
   factory SequenceAccount.fromJson(Map<String, dynamic> json) {
@@ -95,6 +97,7 @@ class SequenceAccount {
       name: json['name'],
       hidden: false,
       orderIndex: null,
+      lastsync: null
     );
   }
 
@@ -105,6 +108,7 @@ class SequenceAccount {
       'balance': balance,
       'hidden': hidden == true ? 1 : 0,
       'order_index': orderIndex ?? 0,
+      'lastsync': lastsync
     };
   }
 
@@ -116,6 +120,7 @@ class SequenceAccount {
       hidden: map['hidden'] == 1,
       id: map['id'],
       orderIndex: map['order_index'],
+      lastsync: map['lastsync']
     );
   }
 }
@@ -128,6 +133,7 @@ extension SequenceAccountCopy on SequenceAccount {
     bool? hidden,
     int? id,
     int? orderIndex,
+    String? lastsync
   }) {
     return SequenceAccount(
       name: name ?? this.name,
@@ -136,6 +142,7 @@ extension SequenceAccountCopy on SequenceAccount {
       hidden: hidden ?? this.hidden,
       id: id ?? this.id,
       orderIndex: orderIndex ?? this.orderIndex,
+      lastsync: lastsync ?? this.lastsync 
     );
   }
 }
