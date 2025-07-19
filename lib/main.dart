@@ -15,9 +15,7 @@ void main() async {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
-  final rootPath = Directory.current.path;
-  final envPath = '$rootPath/.env';
-  await dotenv.load(fileName: envPath);
+  await dotenv.load(fileName: 'assets/env/.env');
   await SecretService.init();
   runApp(
     MultiProvider(
@@ -28,8 +26,6 @@ void main() async {
     )
   );
 }
-  //await dotenv.load(fileName: envPath);
-  //await SecretService.init();
  
   
 

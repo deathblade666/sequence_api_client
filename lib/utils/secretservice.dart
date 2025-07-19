@@ -16,9 +16,7 @@ class SecretService {
   SecretService._(this._encrypter);
 
   static Future<void> init() async {
-    final rootPath = Directory.current.path;
-    final envPath = '$rootPath/.env';
-    await dotenv.load(fileName: envPath);
+    await dotenv.load(fileName: "assets/env/.env");
     final keyString = dotenv.env['ENCRYPTION_KEY'];
     if (keyString == null || keyString.length != 32) {
       throw Exception("Missing or invalid ENCRYPTION_KEY");
