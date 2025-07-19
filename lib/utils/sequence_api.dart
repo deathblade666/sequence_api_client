@@ -31,7 +31,6 @@ class SequenceApi{
     var response = await request.close();
     var responseBody = await response.transform(utf8.decoder).join();
     var jsonData = jsonDecode(responseBody);
-print(responseBody);
     if (jsonData != null &&
         jsonData is Map &&
         jsonData['data'] != null &&

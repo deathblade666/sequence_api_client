@@ -69,25 +69,42 @@ class SecretService {
   }
 
   Future<String> encryptToken(String token) async {
-  return _encrypter.encrypt(token.trim(), iv: _iv).base64;
-}
-
-String _padBase64(String input) {
-  final trimmed = input.trim();
-  final padLength = (4 - trimmed.length % 4) % 4;
-  return trimmed + '=' * padLength;
-}
-
-Future<String?> decryptToken(String encryptedToken) async {
-  try {
-    final paddedToken = _padBase64(encryptedToken);
-    return _encrypter.decrypt64(paddedToken, iv: _iv);
-  } catch (e) {
-    print("❌ Decryption failed: $e");
-    return null;
+    return _encrypter.encrypt(token.trim(), iv: _iv).base64;
   }
-}
+
+  String _padBase64(String input) {
+    final trimmed = input.trim();
+    final padLength = (4 - trimmed.length % 4) % 4;
+    return trimmed + '=' * padLength;
+  }
+
+  Future<String?> decryptToken(String encryptedToken) async {
+    try {
+      final paddedToken = _padBase64(encryptedToken);
+      return _encrypter.decrypt64(paddedToken, iv: _iv);
+    } catch (e) {
+      print("❌ Decryption failed: $e");
+      return null;
+    }
+  }
+
+  bool _isBase64Safe(String input) {
+    final trimmed = input.trim();
+    if (trimmed.length < 8 || trimmed.length % 4 != 0) return false;
+    final base64Regex = RegExp(r'^[A-Za-z0-9+/]+={0,2}$');
+    return base64Regex.hasMatch(trimmed);
+  }
 
 
+  Future<bool> isTokenEncrypted(String token) async {
+    final cleaned = token.trim();
+    if (!_isBase64Safe(cleaned)) return false;
+    try {
+      final decrypted = _encrypter.decrypt64(cleaned, iv: _iv);
+      return decrypted.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
 }
 

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:Seqeunce_API_Client/utils/db/dbhelper.dart';
 import 'package:Seqeunce_API_Client/utils/historyprovider.dart';
 import 'package:Seqeunce_API_Client/utils/secretservice.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +18,7 @@ void main() async {
   }
   await dotenv.load(fileName: 'assets/env/.env');
   await SecretService.init();
+  await ensureTokensEncrypted();
   runApp(
     MultiProvider(
       providers: [
@@ -27,12 +29,32 @@ void main() async {
   );
 }
  
+  final _defaultDarkColorScheme = ColorScheme.fromSwatch(
+    primarySwatch: Colors.indigo, brightness: Brightness.dark);
+  final _defaultLightColorScheme = ColorScheme.fromSwatch(
+    primarySwatch: Colors.indigo);
   
+  Future<void> ensureTokensEncrypted() async {
+    final db = await DatabaseHelper().database;
+    final rules = await db.query('rules');
+    for (final rule in rules) {
+      final id = rule['id'];
+      final token = rule['token'] as String;
+      final isEncrypted = await SecretService.instance.isTokenEncrypted(token);
+      if (!isEncrypted) {
+        print("🔧 Encrypting token for rule ID $id");
+        final encrypted = await SecretService.instance.encryptToken(token);
+        await db.update(
+          'rules',
+          {'token': encrypted},
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+      }
+    }
+  }
 
-final _defaultDarkColorScheme = ColorScheme.fromSwatch(
-  primarySwatch: Colors.indigo, brightness: Brightness.dark);
-final _defaultLightColorScheme = ColorScheme.fromSwatch(
-  primarySwatch: Colors.indigo);
+
 
 class Seqeunce_API_Client extends StatelessWidget {
   Seqeunce_API_Client({super.key});
