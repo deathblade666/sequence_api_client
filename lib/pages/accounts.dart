@@ -1,6 +1,7 @@
 import 'package:Seqeunce_API_Client/utils/db/dbhelper.dart';
 import 'package:Seqeunce_API_Client/utils/secretservice.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:intl/intl.dart';
 import 'package:Seqeunce_API_Client/utils/sequence_api.dart';
 
@@ -18,6 +19,8 @@ class AccountPageState extends State<AccountPage> {
   String apiResponse = '';
   TextEditingController token = TextEditingController();
   final secretService = SecretService.instance;
+              Color pickerColor = Color(0xff443a49);
+            Color currentColor = Color(0xff443a49);
 
   @override
   void initState() {
@@ -75,6 +78,10 @@ class AccountPageState extends State<AccountPage> {
     await updateOrderInDb();
   }
 
+
+  void updateColor(color){
+    setState(() => pickerColor = color);
+  }
   
   Widget build(BuildContext context) {
     return Scaffold(
@@ -202,6 +209,7 @@ class AccountPageState extends State<AccountPage> {
           itemCount: _accounts.length,
           onReorder: onReorder,
           itemBuilder: (context, index) {
+
             final item = _accounts[index];
             final lastSyncString = item.lastsync;
             final lastSyncFormatted = lastSyncString != null
