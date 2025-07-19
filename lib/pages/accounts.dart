@@ -204,40 +204,49 @@ class AccountPageState extends State<AccountPage> {
             final lastSyncFormatted = lastSyncString != null
             ? DateFormat('yyyy-MM-dd hh:mma').format(DateTime.parse(lastSyncString))
             : 'Never';
-            return ListTile(
+            return Card(
               key: ValueKey(item.name),
-              leading: ReorderableDragStartListener(
-                index: index,
-                child: Icon(Icons.drag_handle),
-              ),
-              title: Text(item.name ?? 'Unnamed Account'),
-              subtitle: Text(
-                'Type: ${item.type ?? 'N/A'}\nBalance: \$${item.balance?.toStringAsFixed(2) ?? '0.00'}',
-              ),
-              trailing: Text(
-                "Last Sync\n$lastSyncFormatted",
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-              ),
-              onLongPress: () {
-                showModalBottomSheet( context: context, builder: (context) {
-                  return SizedBox(
-                    height: 100,
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 30, bottom: 30),
-                      child: ListTile(
-                        title: Text("Hide ${item.name}?"),
-                        trailing: Icon(Icons.visibility_off),
-                        onTap: () async {
-                          final updated = item.copyWith(hidden: true);
-                          await DatabaseHelper().upsertAccountByName(updated);
-                          await loadAccounts();
-                          Navigator.pop(context);
-                        },
-                      ),
-                    ),
+              margin: EdgeInsets.symmetric(horizontal: 3, vertical: 3),
+              elevation: 2,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              child: ListTile(
+                leading: ReorderableDragStartListener(
+                  index: index,
+                  child: Icon(Icons.drag_handle),
+                ),
+                title: Text(item.name ?? 'Unnamed Account'),
+                subtitle: Text(
+                  'Type: ${item.type ?? 'N/A'}\nBalance: \$${item.balance?.toStringAsFixed(2) ?? '0.00'}',
+                ),
+                trailing: Text(
+                  "Last Sync\n$lastSyncFormatted",
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  textAlign: TextAlign.right,
+                ),
+                onLongPress: () {
+                  showModalBottomSheet(
+                    context: context,
+                    builder: (context) {
+                      return SizedBox(
+                        height: 100,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 30),
+                          child: ListTile(
+                            title: Text("Hide ${item.name}?"),
+                            trailing: Icon(Icons.visibility_off),
+                            onTap: () async {
+                              final updated = item.copyWith(hidden: true);
+                              await DatabaseHelper().upsertAccountByName(updated);
+                              await loadAccounts();
+                              Navigator.pop(context);
+                            },
+                          ),
+                        ),
+                      );
+                    },
                   );
-                });
-              },
+                },
+              ),
             );
           }
         ),
