@@ -25,45 +25,47 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      drawer: Drawer(
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Spacer(flex: 1,),
-                const Text("Rule History"),
-                Spacer(flex: 1,),
-                IconButton(
-                  icon: Icon(Icons.delete),
-                  onPressed: (){
-                    Provider.of<HistoryProvider>(context, listen: false).clearHistory();
-                  },
-                ),
-              ],
-            ),
-            Expanded(
-              child: Consumer<HistoryProvider>(builder: (context, historyProvider, _) {
-                final history = historyProvider.items;
-                if (history.isEmpty) {
-                  return const Center(child: Text("No history yet"));
-                }
-                return ListView.builder(
-                  itemCount: history.length,
-                  itemBuilder: (context, index) {
-                    final item = history[index];
-                    return ListTile(
-                      title: Text(item.name),
-                      subtitle: Text(
-                        DateFormat('yyyy-MM-dd hh:mm a')
-                        .format(DateTime.parse(item.timestamp)),
-                      ),
-                    );
+      drawer: SafeArea(
+        child: Drawer(
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Spacer(flex: 1,),
+                  const Text("Rule History"),
+                  Spacer(flex: 1,),
+                  IconButton(
+                    icon: Icon(Icons.delete),
+                    onPressed: (){
+                      Provider.of<HistoryProvider>(context, listen: false).clearHistory();
+                    },
+                  ),
+                ],
+              ),
+              Expanded(
+                child: Consumer<HistoryProvider>(builder: (context, historyProvider, _) {
+                  final history = historyProvider.items;
+                  if (history.isEmpty) {
+                    return const Center(child: Text("No history yet"));
                   }
-                );
-              }),
-            ),
-          ]
+                  return ListView.builder(
+                    itemCount: history.length,
+                    itemBuilder: (context, index) {
+                      final item = history[index];
+                      return ListTile(
+                        title: Text(item.name),
+                        subtitle: Text(
+                          DateFormat('yyyy-MM-dd hh:mm a')
+                          .format(DateTime.parse(item.timestamp)),
+                        ),
+                      );
+                    }
+                  );
+                }),
+              ),
+            ]
+          )
         )
       ),
       appBar: AppBar(
