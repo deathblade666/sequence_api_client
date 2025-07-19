@@ -214,11 +214,11 @@ class AccountPageState extends State<AccountPage> {
             : 'Never';
             return Card(
               key: ValueKey(item.name),
+              color: pickerColor,
               margin: EdgeInsets.symmetric(horizontal: 3, vertical: 3),
               elevation: 2,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               child: ListTile(
-                tileColor: pickerColor,
                 leading: ReorderableDragStartListener(
                   index: index,
                   child: Icon(Icons.drag_handle),
@@ -237,51 +237,51 @@ class AccountPageState extends State<AccountPage> {
                     context: context,
                     builder: (context) {
                       return SizedBox(
-                        height: 100,
+                        height: 300,
                         child:Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(top: 15),
-                          child: ListTile(
-                            title: const Text("Pick a Color"),
-                            trailing: Icon(Icons.color_lens),
-                            onTap: () {
-                              showDialog(context: context, builder: (BuildContext context){
-                                return AlertDialog(
-                                  title: const Text("Select a color"),
-                                  content: SingleChildScrollView(
-                                  child: MaterialPicker(
-                                    pickerColor: pickerColor, 
-                                     onColorChanged: (color){
-                                      updateColor(color);
-                                    }),
-                                  ),
-                                  actions: [
-                                    ElevatedButton(
-                                      child: const Text('Got it'),
-                                      onPressed: () {
-                                        setState(() => currentColor = pickerColor);
-                                        Navigator.of(context).pop();
-                                      },
-                                    ),
-                                  ],
-                                );
-                              });
-                            },                       
-                          ),
-                        ),
-                        ListTile(
-                          title: Text("Hide ${item.name}?"),
-                          trailing: Icon(Icons.visibility_off),
-                          onTap: () async {
-                            final updated = item.copyWith(hidden: true);
-                            await DatabaseHelper().upsertAccountByName(updated);
-                            await loadAccounts();
-                            Navigator.pop(context);
-                          },
-                        ),
-                      ]
-                    )
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(top: 15),
+                              child: ListTile(
+                                title: const Text("Pick a Color"),
+                                trailing: Icon(Icons.color_lens),
+                                onTap: () {
+                                  showDialog(context: context, builder: (BuildContext context){
+                                    return AlertDialog(
+                                      title: const Text("Select a color"),
+                                      content: SingleChildScrollView(
+                                      child: MaterialPicker(
+                                        pickerColor: pickerColor, 
+                                        onColorChanged: (color){
+                                          updateColor(color);
+                                        }),
+                                      ),
+                                      actions: [
+                                        ElevatedButton(
+                                          child: const Text('Got it'),
+                                          onPressed: () {
+                                            setState(() => currentColor = pickerColor);
+                                            Navigator.of(context).pop();
+                                          },
+                                        ),
+                                      ],
+                                    );
+                                  });
+                                },                       
+                              ),
+                            ),
+                            ListTile(
+                              title: Text("Hide ${item.name}?"),
+                              trailing: Icon(Icons.visibility_off),
+                              onTap: () async {
+                                final updated = item.copyWith(hidden: true);
+                                await DatabaseHelper().upsertAccountByName(updated);
+                                await loadAccounts();
+                                Navigator.pop(context);
+                              },
+                            ),
+                          ]
+                        )
                       );
                     },
                   );
