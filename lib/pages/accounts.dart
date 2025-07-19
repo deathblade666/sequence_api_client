@@ -1,4 +1,5 @@
-import 'package:Seqeunce_API_Client/utils/dbhelper.dart';
+import 'package:Seqeunce_API_Client/utils/db/dbhelper.dart';
+import 'package:Seqeunce_API_Client/utils/secretservice.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:Seqeunce_API_Client/utils/sequence_api.dart';
@@ -18,11 +19,12 @@ class AccountPageState extends State<AccountPage> {
   bool obscure = true;
   String apiResponse = '';
   TextEditingController token = TextEditingController();
+  final secretService = SecretService();
 
   @override
   void initState() {
     super.initState();
-    loadPrefs();
+    //loadPrefs();
     loadAccounts();
   }
 
@@ -35,22 +37,29 @@ class AccountPageState extends State<AccountPage> {
 
   Future<void> refreshAccounts() async {
     widget.prefs.setString('lastSync', DateTime.now().toIso8601String());
-    final accountsFromApi = await SequenceApi.getAccounts(apitoken!);
+    final secretService = SecretService();
+    final token = await secretService.getToken();
+    print(token);
+    if (token == null || token.isEmpty) {
+      print("No token found — skipping account refresh.");
+      return;
+    }
+    final accountsFromApi = await SequenceApi.getAccounts(token);
     for (var account in accountsFromApi) {
       await DatabaseHelper().upsertAccountByName(account);
     }
     await loadAccounts();
   }
 
-  void loadPrefs() {
-    widget.prefs.reload();
-    String? sequence_api_token = widget.prefs.getString("sequenceToken");
-    if (sequence_api_token != null) {
+
+  void loadPrefs() async {
+    final existingToken = await secretService.getToken();
+    if (existingToken != null) {
       setState(() {
-        token.text = sequence_api_token;
-        apitoken = sequence_api_token;
+        token.text = existingToken;
       });
-    }
+  }
+
   }
 
   Future<void> updateOrderInDb() async {
@@ -93,14 +102,15 @@ class AccountPageState extends State<AccountPage> {
                                 child: Padding(
                                   padding: EdgeInsetsGeometry.directional(start: 15),
                                   child: TextField(
-                                    onSubmitted: (value) {
-                                      String apitoken = value;
-                                      if (apitoken == ""){
-                                        widget.prefs.remove("sequenceToken");
+                                    onSubmitted: (value) async {
+                                      if (value.isEmpty) {
+                                        await secretService.deleteToken();
+                                      } else {
+                                        await secretService.saveToken(value);
                                       }
-                                      widget.prefs.setString("sequenceToken", apitoken);
+
                                       refreshAccounts();
-                                      Navigator.pop(context, apitoken);
+                                      Navigator.pop(context, value);
                                     },
                                     controller: token,
                                     decoration: InputDecoration(
@@ -123,12 +133,13 @@ class AccountPageState extends State<AccountPage> {
                                 ),
                               ),
                               TextButton(
-                                onPressed: () {
-                                  String apitoken = token.text;
-                                  if (apitoken == ""){
-                                    widget.prefs.remove("sequenceToken");
+                                onPressed: () async {
+                                  final apitoken = token.text;
+                                  if (apitoken.isEmpty) {
+                                    await secretService.deleteToken();
+                                  } else {
+                                    await secretService.saveToken(apitoken);
                                   }
-                                  widget.prefs.setString("sequenceToken", apitoken);
                                   refreshAccounts();
                                   Navigator.pop(context, apitoken);
                                 }, 

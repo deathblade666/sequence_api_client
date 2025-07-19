@@ -5,6 +5,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class DatabaseHelper {
+  static const int _version = 3;
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   factory DatabaseHelper() => _instance;
   DatabaseHelper._internal();
@@ -23,7 +24,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: _version,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE accounts(
@@ -52,6 +53,12 @@ class DatabaseHelper {
             order_index INTEGER DEFAULT 0
           )
         ''');
+        await db.execute('''
+          CREATE TABLE secrets (
+            id INTEGER PRIMARY KEY,
+            secret TEXT NOT NULL
+          )
+        ''');
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
@@ -68,7 +75,15 @@ class DatabaseHelper {
             );
           }
         }
-      },
+        if (oldVersion < 3) {
+          await db.execute('''
+            CREATE TABLE secrets (
+              id INTEGER PRIMARY KEY,
+              secret TEXT NOT NULL
+            )
+       ''');
+        }
+      }
     );
   }
 
@@ -222,6 +237,38 @@ class DatabaseHelper {
       {'order_index': newOrder},
       where: 'id = ?',
       whereArgs: [ruleId],
+    );
+  }
+
+  Future<void> upsertSecret(String secretValue) async {
+    final db = await database;
+    await db.insert(
+      'secrets',
+      {'id': 1, 'secret': secretValue},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<String?> getSecret() async {
+    final db = await database;
+    final result = await db.query(
+      'secrets',
+      where: 'id = ?',
+      whereArgs: [1],
+    );
+
+    if (result.isNotEmpty) {
+      return result.first['secret'] as String?;
+    }
+    return null;
+  }
+
+  Future<void> deleteSecret() async {
+    final db = await database;
+    await db.delete(
+      'secrets',
+      where: 'id = ?',
+      whereArgs: [1],
     );
   }
 }

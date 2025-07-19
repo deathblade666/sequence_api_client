@@ -1,4 +1,4 @@
-import 'package:Seqeunce_API_Client/utils/dbhelper.dart';
+import 'package:Seqeunce_API_Client/utils/db/dbhelper.dart';
 import 'package:Seqeunce_API_Client/utils/history.dart';
 import 'package:flutter/foundation.dart';
 
