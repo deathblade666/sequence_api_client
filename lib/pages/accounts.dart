@@ -214,7 +214,7 @@ class AccountPageState extends State<AccountPage> {
             ? DateFormat('yyyy-MM-dd hh:mma').format(DateTime.parse(lastSyncString))
             : 'Never';
             return Card(
-              key: ValueKey(item.name),
+              key: ValueKey(item.id),
               margin: EdgeInsets.symmetric(horizontal: 3, vertical: 3),
               elevation: 2,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
