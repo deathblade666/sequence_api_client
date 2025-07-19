@@ -1,5 +1,6 @@
 import 'package:Seqeunce_API_Client/utils/dbhelper.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:intl/intl.dart';
 import 'package:Seqeunce_API_Client/utils/sequence_api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,6 +19,8 @@ class AccountPageState extends State<AccountPage> {
   bool obscure = true;
   String apiResponse = '';
   TextEditingController token = TextEditingController();
+              Color pickerColor = Color(0xff443a49);
+            Color currentColor = Color(0xff443a49);
 
   @override
   void initState() {
@@ -68,6 +71,10 @@ class AccountPageState extends State<AccountPage> {
     await updateOrderInDb();
   }
 
+
+  void updateColor(color){
+    setState(() => pickerColor = color);
+  }
   
   Widget build(BuildContext context) {
     return Scaffold(
@@ -199,6 +206,7 @@ class AccountPageState extends State<AccountPage> {
           itemCount: _accounts.length,
           onReorder: onReorder,
           itemBuilder: (context, index) {
+
             final item = _accounts[index];
             final lastSyncString = widget.prefs.getString('lastSync');
             final lastSyncFormatted = lastSyncString != null
@@ -206,6 +214,7 @@ class AccountPageState extends State<AccountPage> {
             : 'Never';
             return Card(
               key: ValueKey(item.name),
+              color: pickerColor,
               margin: EdgeInsets.symmetric(horizontal: 3, vertical: 3),
               elevation: 2,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -228,20 +237,51 @@ class AccountPageState extends State<AccountPage> {
                     context: context,
                     builder: (context) {
                       return SizedBox(
-                        height: 100,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 30),
-                          child: ListTile(
-                            title: Text("Hide ${item.name}?"),
-                            trailing: Icon(Icons.visibility_off),
-                            onTap: () async {
-                              final updated = item.copyWith(hidden: true);
-                              await DatabaseHelper().upsertAccountByName(updated);
-                              await loadAccounts();
-                              Navigator.pop(context);
-                            },
-                          ),
-                        ),
+                        height: 300,
+                        child:Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(top: 15),
+                              child: ListTile(
+                                title: const Text("Pick a Color"),
+                                trailing: Icon(Icons.color_lens),
+                                onTap: () {
+                                  showDialog(context: context, builder: (BuildContext context){
+                                    return AlertDialog(
+                                      title: const Text("Select a color"),
+                                      content: SingleChildScrollView(
+                                      child: MaterialPicker(
+                                        pickerColor: pickerColor, 
+                                        onColorChanged: (color){
+                                          updateColor(color);
+                                        }),
+                                      ),
+                                      actions: [
+                                        ElevatedButton(
+                                          child: const Text('Got it'),
+                                          onPressed: () {
+                                            setState(() => currentColor = pickerColor);
+                                            Navigator.of(context).pop();
+                                          },
+                                        ),
+                                      ],
+                                    );
+                                  });
+                                },                       
+                              ),
+                            ),
+                            ListTile(
+                              title: Text("Hide ${item.name}?"),
+                              trailing: Icon(Icons.visibility_off),
+                              onTap: () async {
+                                final updated = item.copyWith(hidden: true);
+                                await DatabaseHelper().upsertAccountByName(updated);
+                                await loadAccounts();
+                                Navigator.pop(context);
+                              },
+                            ),
+                          ]
+                        )
                       );
                     },
                   );
