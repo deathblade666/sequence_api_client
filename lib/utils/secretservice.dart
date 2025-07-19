@@ -13,7 +13,6 @@ class SecretService {
   final _dbHelper = DatabaseHelper();
 
   SecretService() {
-    print("Key length: ${keyString.length}");
     if (keyString.length != 32) {
       throw Exception("Invalid ENCRYPTION_KEY length");
     }
@@ -27,8 +26,6 @@ class SecretService {
       {'id': 1, 'secret': encrypted},
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
-    final result = await db.query('secrets');
-    print("Stored token: ${result.first['secret']}");
   }
 
   Future<String?> getToken() async {
@@ -38,7 +35,6 @@ class SecretService {
       where: 'id = ?',
       whereArgs: [1],
     );
-
     if (result.isNotEmpty) {
       final encrypted = result.first['secret'] as String;
       try {

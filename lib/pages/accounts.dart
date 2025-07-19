@@ -39,7 +39,6 @@ class AccountPageState extends State<AccountPage> {
     widget.prefs.setString('lastSync', DateTime.now().toIso8601String());
     final secretService = SecretService();
     final token = await secretService.getToken();
-    print(token);
     if (token == null || token.isEmpty) {
       print("No token found — skipping account refresh.");
       return;
