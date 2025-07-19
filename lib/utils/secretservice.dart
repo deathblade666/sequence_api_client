@@ -67,5 +67,27 @@ class SecretService {
     final db = await _dbHelper.database;
     await db.delete('secrets', where: 'id = ?', whereArgs: [1]);
   }
+
+  Future<String> encryptToken(String token) async {
+  return _encrypter.encrypt(token.trim(), iv: _iv).base64;
+}
+
+String _padBase64(String input) {
+  final trimmed = input.trim();
+  final padLength = (4 - trimmed.length % 4) % 4;
+  return trimmed + '=' * padLength;
+}
+
+Future<String?> decryptToken(String encryptedToken) async {
+  try {
+    final paddedToken = _padBase64(encryptedToken);
+    return _encrypter.decrypt64(paddedToken, iv: _iv);
+  } catch (e) {
+    print("❌ Decryption failed: $e");
+    return null;
+  }
+}
+
+
 }
 

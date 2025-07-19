@@ -190,12 +190,6 @@ class AccountPageState extends State<AccountPage> {
               );
             });
           });
-          if (result != null ) {
-            setState(() {
-              apitoken = result;
-            });
-            refreshAccounts();
-          }
         },
         icon: Icon(
           Icons.settings

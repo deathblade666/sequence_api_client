@@ -139,42 +139,40 @@ class DatabaseHelper {
     }
   }
 
-  Future<void> upsertAccountByName(SequenceAccount account) async {
-    final db = await database;
-    final existing = await db.query(
+Future<void> upsertAccountByName(SequenceAccount account) async {
+  final db = await database;
+  final normalizedName = account.name?.trim().toLowerCase() ?? '';
+  final existing = await db.query(
+    'accounts',
+    where: 'LOWER(TRIM(name)) = ?',
+    whereArgs: [normalizedName],
+  );
+
+  if (existing.isNotEmpty) {
+    final existingOrder = existing.first['order_index'] as int? ?? 0;
+    await db.update(
       'accounts',
-      where: 'name = ?',
-      whereArgs: [account.name],
+      {
+        ...account.toMap(),
+        'order_index': existingOrder,
+      },
+      where: 'LOWER(TRIM(name)) = ?',
+      whereArgs: [normalizedName],
     );
-
-    if (existing.isNotEmpty) {
-      final existingOrder = existing.first['order_index'] as int? ?? 0;
-
-      await db.update(
-        'accounts',
-        {
-          ...account.toMap(),
-          'order_index': existingOrder,
-        },
-        where: 'name = ?',
-        whereArgs: [account.name],
-      );
-      print("Upserted ${account.name} with preserved order_index $existingOrder");
-
-    } else {
-      final maxOrderResult = await db.rawQuery('SELECT MAX(order_index) as max_order FROM accounts');
-      final maxOrder = maxOrderResult.first['max_order'] as int? ?? 0;
-
-      await db.insert(
-        'accounts',
-        {
-          ...account.toMap(),
-          'order_index': maxOrder + 1,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-    }
+  } else {
+    final maxOrderResult = await db.rawQuery('SELECT MAX(order_index) as max_order FROM accounts');
+    final maxOrder = maxOrderResult.first['max_order'] as int? ?? 0;
+    await db.insert(
+      'accounts',
+      {
+        ...account.toMap(),
+        'order_index': maxOrder + 1,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
+}
+
 
   Future<List<SequenceAccount>> getHiddenAccounts() async {
     final db = await database;
