@@ -81,7 +81,7 @@ class _HomePageState extends State<HomePage> {
               },
               icon: Icon(Icons.refresh),
             ),
-          if (Platform.isAndroid || Platform.isIOS && pageName == "Accounts")
+          if ((Platform.isAndroid || Platform.isIOS) && pageName != "Rules")
             IconButton(
               onPressed: () async {
                 final _accounts = await DatabaseHelper().getAccounts();
