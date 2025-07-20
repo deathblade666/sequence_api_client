@@ -6,11 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:Seqeunce_API_Client/pages/utils/pagecontroller.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
-  HomePage(this.prefs,{super.key});
-  SharedPreferences prefs;
+  HomePage({super.key});
   PageController homepageController = PageController();
 
   @override
@@ -82,7 +80,7 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       body: SafeArea(
-        child: Views(widget.prefs,widget.homepageController, accountPageKey: accountPageKey,)
+        child: Views(widget.homepageController, accountPageKey: accountPageKey,)
       ),
       bottomNavigationBar: BottomAppBar(
         child: Row(

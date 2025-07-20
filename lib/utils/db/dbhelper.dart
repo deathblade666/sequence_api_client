@@ -5,6 +5,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class DatabaseHelper {
+  static const int _version = 4;
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   factory DatabaseHelper() => _instance;
   DatabaseHelper._internal();
@@ -23,7 +24,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: _version,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE accounts(
@@ -32,7 +33,8 @@ class DatabaseHelper {
             type TEXT,
             balance REAL,
             hidden INTEGER,
-            order_index INTEGER
+            order_index INTEGER,
+            lastsync TEXT
           )
         ''');
         await db.execute('''
@@ -52,6 +54,12 @@ class DatabaseHelper {
             order_index INTEGER DEFAULT 0
           )
         ''');
+        await db.execute('''
+          CREATE TABLE secrets (
+            id INTEGER PRIMARY KEY,
+            secret TEXT NOT NULL
+          )
+        ''');
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
@@ -68,7 +76,20 @@ class DatabaseHelper {
             );
           }
         }
-      },
+        if (oldVersion < 3) {
+          await db.execute('''
+            CREATE TABLE secrets (
+              id INTEGER PRIMARY KEY,
+              secret TEXT NOT NULL
+            )
+       ''');
+        }
+        if (oldVersion < 4) {
+          await db.execute('''
+          ALTER TABLE accounts ADD COLUMN lastsync TEXT DEFAULT NULL
+          ''');
+        }
+      }
     );
   }
 
@@ -120,30 +141,26 @@ class DatabaseHelper {
 
   Future<void> upsertAccountByName(SequenceAccount account) async {
     final db = await database;
+    final normalizedName = account.name?.trim().toLowerCase() ?? '';
     final existing = await db.query(
       'accounts',
-      where: 'name = ?',
-      whereArgs: [account.name],
+      where: 'LOWER(TRIM(name)) = ?',
+      whereArgs: [normalizedName],
     );
-
     if (existing.isNotEmpty) {
       final existingOrder = existing.first['order_index'] as int? ?? 0;
-
       await db.update(
         'accounts',
         {
           ...account.toMap(),
           'order_index': existingOrder,
         },
-        where: 'name = ?',
-        whereArgs: [account.name],
+        where: 'LOWER(TRIM(name)) = ?',
+        whereArgs: [normalizedName],
       );
-      print("Upserted ${account.name} with preserved order_index $existingOrder");
-
     } else {
       final maxOrderResult = await db.rawQuery('SELECT MAX(order_index) as max_order FROM accounts');
       final maxOrder = maxOrderResult.first['max_order'] as int? ?? 0;
-
       await db.insert(
         'accounts',
         {
@@ -154,6 +171,7 @@ class DatabaseHelper {
       );
     }
   }
+
 
   Future<List<SequenceAccount>> getHiddenAccounts() async {
     final db = await database;
@@ -222,6 +240,38 @@ class DatabaseHelper {
       {'order_index': newOrder},
       where: 'id = ?',
       whereArgs: [ruleId],
+    );
+  }
+
+  Future<void> upsertSecret(String secretValue) async {
+    final db = await database;
+    await db.insert(
+      'secrets',
+      {'id': 1, 'secret': secretValue},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<String?> getSecret() async {
+    final db = await database;
+    final result = await db.query(
+      'secrets',
+      where: 'id = ?',
+      whereArgs: [1],
+    );
+
+    if (result.isNotEmpty) {
+      return result.first['secret'] as String?;
+    }
+    return null;
+  }
+
+  Future<void> deleteSecret() async {
+    final db = await database;
+    await db.delete(
+      'secrets',
+      where: 'id = ?',
+      whereArgs: [1],
     );
   }
 }

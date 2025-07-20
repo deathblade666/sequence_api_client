@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:Seqeunce_API_Client/pages/accounts.dart';
 import 'package:Seqeunce_API_Client/pages/rules.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class Views extends StatefulWidget {
-  Views(this.prefs,this.homepageController,{super.key, required this.accountPageKey});
+  Views(this.homepageController,{super.key, required this.accountPageKey});
   PageController homepageController;
-  SharedPreferences prefs;
   final GlobalKey<AccountPageState> accountPageKey;
 
 
@@ -31,8 +29,8 @@ class _ViewsState extends State<Views> {
           controller: widget.homepageController,
           physics: NeverScrollableScrollPhysics(),
           children: [
-            AccountPage(widget.prefs, key: widget.accountPageKey,),
-            TransferRules(widget.prefs),
+            AccountPage(key: widget.accountPageKey,),
+            TransferRules(),
           ],
         ),
       ),
