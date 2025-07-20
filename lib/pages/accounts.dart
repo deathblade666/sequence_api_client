@@ -300,7 +300,7 @@ class AccountPageState extends State<AccountPage> {
                                 },
                               ),
                             ),
-                            Wrap(
+                            Wrap(   //TODO: add methos to remove tags
                               spacing: 8,
                               runSpacing: 4,
                               children: [
