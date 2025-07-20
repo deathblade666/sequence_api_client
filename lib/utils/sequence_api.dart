@@ -35,62 +35,55 @@ class SequenceApi{
     jsonData is Map &&
     jsonData['data'] != null &&
     jsonData['data']['balances'] != null) {
-  List<dynamic> balancesJson = jsonData['data']['balances'];
-  List<SequenceAccount> accountList = [];
+      List<dynamic> balancesJson = jsonData['data']['balances'];
+      List<SequenceAccount> accountList = [];
 
-  final existingAccounts = await dbHelper.getAccounts();
-  final hiddenAccounts = await dbHelper.getHiddenAccounts();
-  final allExistingAccounts = [...existingAccounts, ...hiddenAccounts];
+      final existingAccounts = await dbHelper.getAccounts();
+      final hiddenAccounts = await dbHelper.getHiddenAccounts();
+      final allExistingAccounts = [...existingAccounts, ...hiddenAccounts];
 
-  final orderMap = {
-    for (var acc in existingAccounts) acc.name: acc.orderIndex ?? 0,
-  };
-  final hiddenMap = {
-    for (var acc in allExistingAccounts) acc.name: acc.hidden ?? false,
-  };
+      final orderMap = {
+        for (var acc in existingAccounts) acc.name: acc.orderIndex ?? 0,
+      };
+      final hiddenMap = {
+        for (var acc in allExistingAccounts) acc.name: acc.hidden ?? false,
+      };
 
-  for (var data in balancesJson) {
-    final name = data['name'];
+      for (var data in balancesJson) {
+        final name = data['name'];
+        final existing = allExistingAccounts.firstWhere(
+          (acc) => acc.name == name,
+          orElse: () => SequenceAccount(
+            name: name,
+            type: '',
+            balance: 0.0,
+            hidden: false,
+            orderIndex: 0,
+            lastsync: '',
+            color: '#00000000',
+            tags: '',
+          ),
+        );
 
-    // Preserve local fields
-    final existing = allExistingAccounts.firstWhere(
-      (acc) => acc.name == name,
-      orElse: () => SequenceAccount(
-        name: name,
-        type: '',
-        balance: 0.0,
-        hidden: false,
-        orderIndex: 0,
-        lastsync: '',
-        color: '#00000000',
-        tags: '',
-      ),
-    );
-
-    final preservedOrder = orderMap[name] ?? orderMap.length;
-    final preservedHidden = hiddenMap[name] ?? false;
-
-    final account = SequenceAccount.fromJson(data).copyWith(
-      orderIndex: preservedOrder,
-      hidden: preservedHidden,
-      color: existing.color,
-      tags: existing.tags,
-    );
-
-    await dbHelper.upsertAccountByName(account);
-
-    if (!preservedHidden) {
-      accountList.add(account);
+        final preservedOrder = orderMap[name] ?? orderMap.length;
+        final preservedHidden = hiddenMap[name] ?? false;
+        final account = SequenceAccount.fromJson(data).copyWith(
+          orderIndex: preservedOrder,
+          hidden: preservedHidden,
+          color: existing.color,
+          tags: existing.tags,
+        );
+        await dbHelper.upsertAccountByName(account);
+        if (!preservedHidden) {
+          accountList.add(account);
+        }
+      }
+      return accountList;
+    } else {
+      throw ApiDataException(
+        '\nInvalid or missing data in API response\nThis is likely due to an invalid or missing API token\nPlease press the settings button to add or review your token',
+      );
     }
-  }
-
-  return accountList;
-} else {
-  throw ApiDataException(
-    '\nInvalid or missing data in API response\nThis is likely due to an invalid or missing API token\nPlease press the settings button to add or review your token',
-  );
-}
-
   }
 }
 
