@@ -35,6 +35,7 @@ class AccountPageState extends State<AccountPage> {
     });
   }
 
+
   Future<void> refreshAccounts() async {
     final token = await secretService.getToken();
     if (token == null || token.isEmpty) {
@@ -50,8 +51,6 @@ class AccountPageState extends State<AccountPage> {
     await loadAccounts();
   }
 
-
-
   void loadPrefs() async {
     final existingToken = await secretService.getToken();
     if (existingToken != null) {
@@ -65,6 +64,7 @@ class AccountPageState extends State<AccountPage> {
     for (int i = 0; i < _accounts.length; i++) {
       await DatabaseHelper().updateAccountOrder(_accounts[i].name!, i);
     }
+    loadAccounts();
   }
 
   void onReorder(int oldIndex, int newIndex) async {
@@ -84,13 +84,12 @@ class AccountPageState extends State<AccountPage> {
   }
 
   String colorToHex(Color color, {bool leadingHashSign = true}) {
-  final alpha = (color.alpha).toRadixString(16).padLeft(2, '0');
-  final red = (color.red).toRadixString(16).padLeft(2, '0');
-  final green = (color.green).toRadixString(16).padLeft(2, '0');
-  final blue = (color.blue).toRadixString(16).padLeft(2, '0');
-  return '${leadingHashSign ? '#' : ''}$alpha$red$green$blue';
-}
-
+    final alpha = (color.alpha).toRadixString(16).padLeft(2, '0');
+    final red = (color.red).toRadixString(16).padLeft(2, '0');
+    final green = (color.green).toRadixString(16).padLeft(2, '0');
+    final blue = (color.blue).toRadixString(16).padLeft(2, '0');
+    return '${leadingHashSign ? '#' : ''}$alpha$red$green$blue';
+  }
 
   void updateColor(color){
     setState(() => pickerColor = color);
@@ -127,7 +126,6 @@ class AccountPageState extends State<AccountPage> {
                                       } else {
                                         await secretService.saveToken(value);
                                       }
-
                                       refreshAccounts();
                                       Navigator.pop(context, value);
                                     },
@@ -295,7 +293,7 @@ class AccountPageState extends State<AccountPage> {
                                 onTap: () async {
                                   final updated = item.copyWith(hidden: true);
                                   await DatabaseHelper().upsertAccountByName(updated);
-                                  await loadAccounts();
+                                  loadAccounts();
                                   Navigator.pop(context);
                                 },
                               ),
@@ -333,11 +331,32 @@ class AccountPageState extends State<AccountPage> {
                                               label: const Text("Tag Name"),
                                             ),
                                             controller: _tagController,
+                                            autofocus: true,
+                                            onSubmitted: (value) async{
+                                              String hexColor = colorToHex(pickerColor);
+                                              SequenceAccount updatedAccount = SequenceAccount(
+                                                id: item.id, 
+                                                balance: item.balance,
+                                                name: item.name,
+                                                type: item.type,
+                                                color: hexColor,
+                                                lastsync: item.lastsync,
+                                                hidden: item.hidden,
+                                                tags: value,
+                                                orderIndex: item.orderIndex
+                                              );
+                                              await DatabaseHelper().updateAccount(updatedAccount);
+                                              loadAccounts();
+                                              _tagController.clear();
+                                              Navigator.of(context).pop();
+                                              Navigator.of(context).pop();
+                                            },
                                           ),
                                           Padding(padding: EdgeInsetsGeometry.directional(bottom: 15)),
                                           ColorPicker(
                                             pickerColor: pickerColor, 
-                                            onColorChanged: updateColor
+                                            onColorChanged: updateColor,
+                                            displayThumbColor: true,
                                           ),
                                           TextButton(
                                             onPressed: () async {
@@ -350,11 +369,13 @@ class AccountPageState extends State<AccountPage> {
                                                 color: hexColor,
                                                 lastsync: item.lastsync,
                                                 hidden: item.hidden,
-                                                tags: _tagController.text
+                                                tags: _tagController.text,
+                                                orderIndex: item.orderIndex
                                               );
                                               await DatabaseHelper().updateAccount(updatedAccount);
                                               loadAccounts();
                                               _tagController.clear();
+                                              Navigator.of(context).pop();
                                               Navigator.of(context).pop();
                                             },
                                             child: const Text("Done"),
