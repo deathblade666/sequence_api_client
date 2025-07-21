@@ -37,7 +37,7 @@ when you first setup your rule, you'll need the Ruleid, this is part of the path
 3. cd into where you cloned the repo
 4. run ``flutter pub get``
 5. create the following folder path within the project root directory ``assets/env``
-6. create a ``.env`` file
+6. create a ``.env`` file inside the newly created ``assets/env``
 
 ```
 ENCRYPTION_KEY=<insert a 32 character alphanumeric string>
