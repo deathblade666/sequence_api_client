@@ -311,6 +311,7 @@ class AccountPageState extends State<AccountPage> {
                                   onTap: () {
                                     showDialog(context: context, builder: (BuildContext context) {
                                        _tagController.text = item.tags!;
+                                       pickerColor = Colors.black;
                                       return AlertDialog(
                                         title: Text("Edit Tag for ${item.name}"),
                                         actions: [
@@ -399,6 +400,7 @@ class AccountPageState extends State<AccountPage> {
                                   GestureDetector(
                                     onTap: () {
                                       showDialog(context: context, builder: (BuildContext context) {
+                                        pickerColor = Colors.black;
                                         return AlertDialog(
                                           title: Text("Create Tag for ${item.name}"),
                                           actions: [
