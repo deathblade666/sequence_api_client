@@ -5,7 +5,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class DatabaseHelper {
-  static const int _version = 4;
+  static const int _version = 5;
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   factory DatabaseHelper() => _instance;
   DatabaseHelper._internal();
@@ -34,7 +34,9 @@ class DatabaseHelper {
             balance REAL,
             hidden INTEGER,
             order_index INTEGER,
-            lastsync TEXT
+            lastsync TEXT,
+            color TEXT NOT NULL DEFAULT '#00000000',
+            tags TEXT
           )
         ''');
         await db.execute('''
@@ -87,6 +89,14 @@ class DatabaseHelper {
         if (oldVersion < 4) {
           await db.execute('''
           ALTER TABLE accounts ADD COLUMN lastsync TEXT DEFAULT NULL
+          ''');
+        }
+        if (oldVersion < 5) {
+          await db.execute('''
+          ALTER TABLE accounts ADD COLUMN color TEXT DEFAULT '#00000000'
+          ''');
+          await db.execute('''
+          ALTER TABLE accounts ADD COLUMN tags TEXT DEFAULT NULL
           ''');
         }
       }

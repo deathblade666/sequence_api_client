@@ -1,6 +1,8 @@
+import 'package:Seqeunce_API_Client/pages/utils/filter_notifier.dart';
 import 'package:Seqeunce_API_Client/utils/db/dbhelper.dart';
 import 'package:Seqeunce_API_Client/utils/secretservice.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:intl/intl.dart';
 import 'package:Seqeunce_API_Client/utils/sequence_api.dart';
 
@@ -18,6 +20,8 @@ class AccountPageState extends State<AccountPage> {
   String apiResponse = '';
   TextEditingController token = TextEditingController();
   final secretService = SecretService.instance;
+  Color pickerColor = Colors.transparent;
+  TextEditingController _tagController = TextEditingController();
 
   @override
   void initState() {
@@ -32,6 +36,7 @@ class AccountPageState extends State<AccountPage> {
       _accounts = accounts;
     });
   }
+
 
   Future<void> refreshAccounts() async {
     final token = await secretService.getToken();
@@ -48,22 +53,20 @@ class AccountPageState extends State<AccountPage> {
     await loadAccounts();
   }
 
-
-
   void loadPrefs() async {
     final existingToken = await secretService.getToken();
     if (existingToken != null) {
       setState(() {
         token.text = existingToken;
       });
-  }
-
+    }
   }
 
   Future<void> updateOrderInDb() async {
     for (int i = 0; i < _accounts.length; i++) {
       await DatabaseHelper().updateAccountOrder(_accounts[i].name!, i);
     }
+    loadAccounts();
   }
 
   void onReorder(int oldIndex, int newIndex) async {
@@ -75,7 +78,27 @@ class AccountPageState extends State<AccountPage> {
     await updateOrderInDb();
   }
 
-  
+  Color hexToColor(String hexString) {
+    final buffer = StringBuffer();
+    if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
+    buffer.write(hexString.replaceFirst('#', ''));
+    return Color(int.parse(buffer.toString(), radix: 16));
+  }
+
+  String colorToHex(Color color, {bool leadingHashSign = true}) {
+    final alpha = (color.alpha).toRadixString(16).padLeft(2, '0');
+    final red = (color.red).toRadixString(16).padLeft(2, '0');
+    final green = (color.green).toRadixString(16).padLeft(2, '0');
+    final blue = (color.blue).toRadixString(16).padLeft(2, '0');
+    return '${leadingHashSign ? '#' : ''}$alpha$red$green$blue';
+  }
+
+  void updateColor(color){
+    setState(() => pickerColor = color);
+  }
+
+
+
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -106,7 +129,6 @@ class AccountPageState extends State<AccountPage> {
                                       } else {
                                         await secretService.saveToken(value);
                                       }
-
                                       refreshAccounts();
                                       Navigator.pop(context, value);
                                     },
@@ -197,63 +219,274 @@ class AccountPageState extends State<AccountPage> {
       ),
       body: RefreshIndicator(
         onRefresh: refreshAccounts,
-        child: ReorderableListView.builder(
-          buildDefaultDragHandles: false,
-          itemCount: _accounts.length,
-          onReorder: onReorder,
-          itemBuilder: (context, index) {
-            final item = _accounts[index];
-            final lastSyncString = item.lastsync;
-            final lastSyncFormatted = lastSyncString != null
-            ? DateFormat('yyyy-MM-dd hh:mma').format(DateTime.parse(lastSyncString))
-            : 'Never';
-            return Card(
-              key: ValueKey(item.id),
-              margin: EdgeInsets.symmetric(horizontal: 3, vertical: 3),
-              elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              child: ListTile(
-                leading: ReorderableDragStartListener(
-                  index: index,
-                  child: Icon(Icons.drag_handle),
-                ),
-                title: Text(item.name ?? 'Unnamed Account'),
-                subtitle: Text(
-                  'Type: ${item.type ?? 'N/A'}\nBalance: \$${item.balance?.toStringAsFixed(2) ?? '0.00'}',
-                ),
-                trailing: Text(
-                  "Last Sync\n$lastSyncFormatted",
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                  textAlign: TextAlign.right,
-                ),
-                onLongPress: () {
-                  showModalBottomSheet(
-                    context: context,
-                    builder: (context) {
-                      return SizedBox(
-                        height: 100,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 30),
-                          child: ListTile(
-                            title: Text("Hide ${item.name}?"),
-                            trailing: Icon(Icons.visibility_off),
-                            onTap: () async {
-                              final updated = item.copyWith(hidden: true);
-                              await DatabaseHelper().upsertAccountByName(updated);
-                              await loadAccounts();
-                              Navigator.pop(context);
-                            },
-                          ),
+        child: ValueListenableBuilder<String?>(
+          valueListenable: selectedTagNotifier,
+          builder: (context, selectedTag, _) {
+            final filteredAccounts = selectedTag == null
+              ? _accounts
+              : _accounts.where((account) {
+                final tags = account.tags?.split(',') ?? [];
+                return tags.map((t) => t.trim()).contains(selectedTag);
+              }).toList();
+            return ReorderableListView.builder(
+              buildDefaultDragHandles: false,
+              itemCount: filteredAccounts.length,
+              onReorder: onReorder,
+              itemBuilder: (context, index) {
+                final item = filteredAccounts[index];
+                final lastSyncString = item.lastsync;
+                final lastSyncFormatted = lastSyncString != null
+                  ? DateFormat('yyyy-MM-dd hh:mma').format(DateTime.parse(lastSyncString))
+                  : 'Never';
+                List<String>? tagList = item.tags?.split(',');
+                return Card(
+                  key: ValueKey(item.id),
+                  margin: EdgeInsets.symmetric(horizontal: 3, vertical: 3),
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  child: ListTile(
+                    leading: ReorderableDragStartListener(
+                      index: index,
+                      child: Icon(Icons.drag_handle),
+                    ),
+                    title: Text(item.name ?? 'Unnamed Account'),
+                    subtitle: Text(
+                      'Type: ${item.type ?? 'N/A'}\nBalance: \$${item.balance?.toStringAsFixed(2) ?? '0.00'}',
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          children:[
+                            ...(item.tags ?? '')
+                            .split(',')
+                            .where((tag) => tag.trim().isNotEmpty)
+                            .map((tag) => Container(
+                              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: hexToColor(item.color!),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: hexToColor(item.color!)),
+                              ),
+                              child: Text(
+                                tag.trim(),
+                                style: TextStyle(fontSize: 12, color: Colors.white),
+                              ),
+                            ))
+                            .toList() 
+                          ]
                         ),
+                        Padding(padding: EdgeInsetsGeometry.directional(end: 15)),
+                        Text(
+                          "Last Sync\n$lastSyncFormatted\n",
+                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                          textAlign: TextAlign.right,
+                        ),
+                      ],
+                    ),
+                    onLongPress: () {
+                      showModalBottomSheet(
+                        context: context,
+                        builder: (context) {
+                          return SizedBox(
+                            height: 300,
+                            child: Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsetsGeometry.directional(top: 30),
+                                  child: ListTile(
+                                    title: Text("Hide ${item.name}?"),
+                                    trailing: Icon(Icons.visibility_off),
+                                    onTap: () async {
+                                      final updated = item.copyWith(hidden: true);
+                                      await DatabaseHelper().upsertAccountByName(updated);
+                                      loadAccounts();
+                                      Navigator.pop(context);
+                                    },
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    showDialog(context: context, builder: (BuildContext context) {
+                                       _tagController.text = item.tags!;
+                                       pickerColor = Colors.black;
+                                      return AlertDialog(
+                                        title: Text("Edit Tag for ${item.name}"),
+                                        actions: [
+                                          TextField(
+                                            decoration: InputDecoration(
+                                              label: const Text("Tag Name"),
+                                            ),
+                                            controller: _tagController,
+                                            autofocus: true,
+                                            onSubmitted: (value) async{
+                                              String hexColor = colorToHex(pickerColor);
+                                              SequenceAccount updatedAccount = SequenceAccount(
+                                                id: item.id, 
+                                                balance: item.balance,
+                                                name: item.name,
+                                                type: item.type,
+                                                color: hexColor,
+                                                lastsync: item.lastsync,
+                                                hidden: item.hidden,
+                                                tags: value,
+                                                orderIndex: item.orderIndex
+                                              );
+                                              await DatabaseHelper().updateAccount(updatedAccount);
+                                              loadAccounts();
+                                              _tagController.clear();
+                                              Navigator.of(context).pop();
+                                              Navigator.of(context).pop();
+                                            },
+                                          ),
+                                          Padding(padding: EdgeInsetsGeometry.directional(bottom: 15)),
+                                          ColorPicker(
+                                            pickerColor: pickerColor, 
+                                            onColorChanged: updateColor,
+                                            displayThumbColor: true,
+                                          ),
+                                          TextButton(
+                                            onPressed: () async {
+                                              String hexColor = colorToHex(pickerColor);
+                                              SequenceAccount updatedAccount = SequenceAccount(
+                                                id: item.id, 
+                                                balance: item.balance,
+                                                name: item.name,
+                                                type: item.type,
+                                                color: hexColor,
+                                                  lastsync: item.lastsync,
+                                                  hidden: item.hidden,
+                                                tags: _tagController.text,
+                                                orderIndex: item.orderIndex
+                                              );
+                                              await DatabaseHelper().updateAccount(updatedAccount);
+                                              loadAccounts();
+                                              _tagController.clear();
+                                              Navigator.of(context).pop();
+                                              Navigator.of(context).pop();
+                                            },
+                                            child: const Text("Done"),
+                                          ),
+                                        ],
+                                      );
+                                    }); 
+                                  },
+                                  child: Wrap(
+                                    spacing: 8,
+                                    runSpacing: 4,
+                                    children: [
+                                      ...(item.tags ?? '')
+                                      .split(',')
+                                      .where((tag) => tag.trim().isNotEmpty)
+                                      .map((tag) => Container(
+                                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: hexToColor(item.color!),
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(color: hexToColor(item.color!)),
+                                        ),
+                                        child: Text(
+                                          tag.trim(),
+                                          style: TextStyle(fontSize: 12, color: Colors.white),
+                                        ),
+                                      ))
+                                      .toList(),
+                                    ]
+                                  ),
+                                ),
+                                if ((item.tags ?? '').trim().isEmpty)
+                                  GestureDetector(
+                                    onTap: () {
+                                      showDialog(context: context, builder: (BuildContext context) {
+                                        pickerColor = Colors.black;
+                                        return AlertDialog(
+                                          title: Text("Create Tag for ${item.name}"),
+                                          actions: [
+                                            TextField(
+                                              decoration: InputDecoration(
+                                                label: const Text("Tag Name"),
+                                              ),
+                                              controller: _tagController,
+                                              autofocus: true,
+                                              onSubmitted: (value) async{
+                                                String hexColor = colorToHex(pickerColor);
+                                                SequenceAccount updatedAccount = SequenceAccount(
+                                                  id: item.id, 
+                                                  balance: item.balance,
+                                                  name: item.name,
+                                                  type: item.type,
+                                                  color: hexColor,
+                                                  lastsync: item.lastsync,
+                                                  hidden: item.hidden,
+                                                  tags: value,
+                                                  orderIndex: item.orderIndex
+                                                );
+                                                await DatabaseHelper().updateAccount(updatedAccount);
+                                                loadAccounts();
+                                                _tagController.clear();
+                                                Navigator.of(context).pop();
+                                                Navigator.of(context).pop();
+                                              },
+                                            ),
+                                            Padding(padding: EdgeInsetsGeometry.directional(bottom: 15)),
+                                            ColorPicker(
+                                              pickerColor: pickerColor, 
+                                              onColorChanged: updateColor,
+                                              displayThumbColor: true,
+                                            ),
+                                            TextButton(
+                                              onPressed: () async {
+                                                String hexColor = colorToHex(pickerColor);
+                                                SequenceAccount updatedAccount = SequenceAccount(
+                                                  id: item.id, 
+                                                  balance: item.balance,
+                                                  name: item.name,
+                                                  type: item.type,
+                                                  color: hexColor,
+                                                  lastsync: item.lastsync,
+                                                  hidden: item.hidden,
+                                                  tags: _tagController.text,
+                                                  orderIndex: item.orderIndex
+                                                );
+                                                await DatabaseHelper().updateAccount(updatedAccount);
+                                                loadAccounts();
+                                                _tagController.clear();
+                                                Navigator.of(context).pop();
+                                                Navigator.of(context).pop();
+                                              },
+                                              child: const Text("Done"),
+                                            ),
+                                          ],
+                                        );
+                                      });
+                                    },
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color: Colors.blueAccent,
+                                      borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        'Add Tag',
+                                        style: TextStyle(fontSize: 12, color: Colors.black87),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            )
+                          );       
+                        },
                       );
                     },
-                  );
-                },
-              ),
+                  ),
+                );
+              }
             );
           }
         ),
-      ),
+      )
     );
   }
 }

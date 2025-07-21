@@ -32,29 +32,46 @@ class SequenceApi{
     var responseBody = await response.transform(utf8.decoder).join();
     var jsonData = jsonDecode(responseBody);
     if (jsonData != null &&
-        jsonData is Map &&
-        jsonData['data'] != null &&
-        jsonData['data']['balances'] != null) {
+    jsonData is Map &&
+    jsonData['data'] != null &&
+    jsonData['data']['balances'] != null) {
       List<dynamic> balancesJson = jsonData['data']['balances'];
       List<SequenceAccount> accountList = [];
+
       final existingAccounts = await dbHelper.getAccounts();
       final hiddenAccounts = await dbHelper.getHiddenAccounts();
       final allExistingAccounts = [...existingAccounts, ...hiddenAccounts];
+
       final orderMap = {
-        for (var acc in existingAccounts)
-          acc.name: acc.orderIndex ?? 0,
+        for (var acc in existingAccounts) acc.name: acc.orderIndex ?? 0,
       };
       final hiddenMap = {
-        for (var acc in allExistingAccounts)
-          acc.name: acc.hidden ?? false,
+        for (var acc in allExistingAccounts) acc.name: acc.hidden ?? false,
       };
+
       for (var data in balancesJson) {
         final name = data['name'];
+        final existing = allExistingAccounts.firstWhere(
+          (acc) => acc.name == name,
+          orElse: () => SequenceAccount(
+            name: name,
+            type: '',
+            balance: 0.0,
+            hidden: false,
+            orderIndex: 0,
+            lastsync: '',
+            color: '#00000000',
+            tags: '',
+          ),
+        );
+
         final preservedOrder = orderMap[name] ?? orderMap.length;
         final preservedHidden = hiddenMap[name] ?? false;
         final account = SequenceAccount.fromJson(data).copyWith(
           orderIndex: preservedOrder,
           hidden: preservedHidden,
+          color: existing.color,
+          tags: existing.tags,
         );
         await dbHelper.upsertAccountByName(account);
         if (!preservedHidden) {
@@ -78,6 +95,8 @@ class SequenceAccount {
   final int? id;
   final int? orderIndex;
   final String? lastsync;
+  String? color;
+  String? tags;
 
   SequenceAccount({
     required this.balance,
@@ -86,7 +105,9 @@ class SequenceAccount {
     this.hidden,
     this.id,
     this.orderIndex,
-    this.lastsync
+    this.lastsync,
+    this.color,
+    this.tags
   });
 
   factory SequenceAccount.fromJson(Map<String, dynamic> json) {
@@ -96,7 +117,9 @@ class SequenceAccount {
       name: json['name'],
       hidden: false,
       orderIndex: null,
-      lastsync: null
+      lastsync: null,
+      color: '#00000000',
+      tags: null,
     );
   }
 
@@ -107,7 +130,9 @@ class SequenceAccount {
       'balance': balance,
       'hidden': hidden == true ? 1 : 0,
       'order_index': orderIndex ?? 0,
-      'lastsync': lastsync
+      'lastsync': lastsync,
+      'color': color,
+      'tags': tags
     };
   }
 
@@ -119,7 +144,9 @@ class SequenceAccount {
       hidden: map['hidden'] == 1,
       id: map['id'],
       orderIndex: map['order_index'],
-      lastsync: map['lastsync']
+      lastsync: map['lastsync'],
+      color: map['color'],
+      tags: map['tags']
     );
   }
 }
@@ -132,7 +159,9 @@ extension SequenceAccountCopy on SequenceAccount {
     bool? hidden,
     int? id,
     int? orderIndex,
-    String? lastsync
+    String? lastsync,
+    String? color,
+    String? tags
   }) {
     return SequenceAccount(
       name: name ?? this.name,
@@ -141,7 +170,9 @@ extension SequenceAccountCopy on SequenceAccount {
       hidden: hidden ?? this.hidden,
       id: id ?? this.id,
       orderIndex: orderIndex ?? this.orderIndex,
-      lastsync: lastsync ?? this.lastsync 
+      lastsync: lastsync ?? this.lastsync,
+      color: color ?? this.color,
+      tags: tags ?? this.tags
     );
   }
 }

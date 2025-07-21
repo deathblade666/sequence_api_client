@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:Seqeunce_API_Client/pages/accounts.dart';
+import 'package:Seqeunce_API_Client/pages/utils/filter_notifier.dart';
+import 'package:Seqeunce_API_Client/utils/db/dbhelper.dart';
 import 'package:Seqeunce_API_Client/utils/historyprovider.dart';
 import 'package:flutter/material.dart';
 import 'package:Seqeunce_API_Client/pages/utils/pagecontroller.dart';
@@ -18,6 +20,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final GlobalKey<AccountPageState> accountPageKey = GlobalKey<AccountPageState>();
   String pageName = "Accounts";
+  Icon filterIcon = Icon(Icons.filter_alt);
+  
 
   @override
   Widget build(BuildContext context) {
@@ -76,6 +80,35 @@ class _HomePageState extends State<HomePage> {
                accountPageKey.currentState?.refreshAccounts();
               },
               icon: Icon(Icons.refresh),
+            ),
+          if ((Platform.isAndroid || Platform.isIOS) && pageName != "Rules")
+            IconButton(
+              onPressed: () async {
+                final _accounts = await DatabaseHelper().getAccounts();
+                final accountTags = _accounts
+                  .map((account) => account.tags)
+                  .where((tags) => tags != null && tags.isNotEmpty)
+                  .toSet()
+                  .toList();
+                final selectedTag = await showMenu<String?>(
+                  context: context,
+                  position: RelativeRect.fromLTRB(100, 100, 0, 0),
+                  items: [
+                    PopupMenuItem<String?>(
+                      value: null,
+                      child: Text('None'),
+                    ),
+                    ...accountTags.map((tag) => PopupMenuItem<String?>(
+                      value: tag,
+                      child: Text(tag!),
+                    )),
+                  ],
+                );
+                if (selectedTag != selectedTagNotifier.value) {
+                  selectedTagNotifier.value = selectedTag;
+                }
+              },             
+              icon: filterIcon
             ),
         ],
       ),
