@@ -36,7 +36,15 @@ when you first setup your rule, you'll need the Ruleid, this is part of the path
 2. Clone this repo
 3. cd into where you cloned the repo
 4. run ``flutter pub get``
-5. then ``flutter build <platform>``
+5. create the following folder path within the project root directory ``assets/env``
+6. create a ``.env`` file
+
+```
+ENCRYPTION_KEY=<insert a 32 character alphanumeric string>
+ENCRYPTION_IV=<insert a 16 alphanumeric string>
+```
+
+7. then ``flutter build <platform>``
 
 ## Getting Started
 
