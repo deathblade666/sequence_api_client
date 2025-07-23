@@ -1,11 +1,12 @@
 import 'package:Seqeunce_API_Client/utils/history.dart';
 import 'package:Seqeunce_API_Client/utils/rules.dart';
 import 'package:Seqeunce_API_Client/utils/sequence_api.dart';
+import 'package:Seqeunce_API_Client/utils/tags.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class DatabaseHelper {
-  static const int _version = 5;
+  static const int _version = 6;
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   factory DatabaseHelper() => _instance;
   DatabaseHelper._internal();
@@ -35,7 +36,7 @@ class DatabaseHelper {
             hidden INTEGER,
             order_index INTEGER,
             lastsync TEXT,
-            color TEXT NOT NULL DEFAULT '#00000000',
+            color TEXT,
             tags TEXT
           )
         ''');
@@ -60,6 +61,14 @@ class DatabaseHelper {
           CREATE TABLE secrets (
             id INTEGER PRIMARY KEY,
             secret TEXT NOT NULL
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE tags (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT,
+          color TEXT,
+          type TEXT
           )
         ''');
       },
@@ -98,6 +107,34 @@ class DatabaseHelper {
           await db.execute('''
           ALTER TABLE accounts ADD COLUMN tags TEXT DEFAULT NULL
           ''');
+        }
+        if (oldVersion < 6){
+          await db.execute('''
+            ALTER TABLE rules ADD COLUMN tags TEXT;
+          ''');
+          await db.execute('''
+            ALTER TABLE rules ADD COLUMN color TEXT;
+          ''');
+          await db.execute('''
+            CREATE TABLE accounts_new (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              name TEXT,
+              type TEXT,
+              balance REAL,
+              hidden INTEGER,
+              order_index INTEGER,
+              lastsync TEXT,
+              color TEXT,
+              tags TEXT
+            )
+          ''');
+          await db.execute('''
+            INSERT INTO accounts_new (id, name, type, balance, hidden, order_index, lastsync, color, tags)
+            SELECT id, name, type, balance, hidden, order_index, lastsync, color, tags FROM accounts
+          ''');
+          await db.execute('DROP TABLE accounts');
+          await db.execute('ALTER TABLE accounts_new RENAME TO accounts');
+          clearAccountTagsAndColors();
         }
       }
     );
@@ -181,6 +218,17 @@ class DatabaseHelper {
       );
     }
   }
+
+Future<void> clearAccountTagsAndColors() async {
+  final db = await database;
+  await db.update(
+    'accounts',
+    {
+      'tags': null,
+      'color': null,
+    },
+  );
+}
 
 
   Future<List<SequenceAccount>> getHiddenAccounts() async {
@@ -284,4 +332,53 @@ class DatabaseHelper {
       whereArgs: [1],
     );
   }
+
+  Future<List<Tag>> fetchTagsByType(String type) async {
+  final db = await database;
+  final results = await db.query('tags', where: 'type = ?', whereArgs: [type]);
+  return results.map((map) => Tag.fromMap(map)).toList();
+}
+
+Future<void> createTag(String name, String type, String hexColor) async {
+  final db = await database;
+  final exists = Sqflite.firstIntValue(await db.rawQuery(
+    'SELECT COUNT(*) FROM tags WHERE name = ? AND type = ?',
+    [name, type],
+  ));
+  if (exists == 0) {
+    await db.insert('tags', {
+      'name': name,
+      'type': type,
+      'color': hexColor,
+    });
+  }
+}
+
+
+Future<void> deleteTag(String name, String type) async {
+  final db = await database;
+  await db.delete('tags', where: 'name = ? AND type = ?', whereArgs: [name, type]);
+}
+
+Future<void> clearTagFromAccounts(String tagName) async {
+  final db = await database;
+
+  final result = await db.query(
+    'accounts',
+    where: 'tags = ?',
+    whereArgs: [tagName],
+  );
+
+  for (final row in result) {
+    final accountId = row['id'] as int;
+    await db.update(
+      'accounts',
+      {'tags': null, 'color': null},
+      where: 'id = ?',
+      whereArgs: [accountId],
+    );
+  }
+}
+
+
 }

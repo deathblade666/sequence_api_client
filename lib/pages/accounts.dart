@@ -1,6 +1,7 @@
 import 'package:Seqeunce_API_Client/pages/utils/filter_notifier.dart';
 import 'package:Seqeunce_API_Client/utils/db/dbhelper.dart';
 import 'package:Seqeunce_API_Client/utils/secretservice.dart';
+import 'package:Seqeunce_API_Client/utils/tags.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:intl/intl.dart';
@@ -275,7 +276,6 @@ class AccountPageState extends State<AccountPage> {
                                 style: TextStyle(fontSize: 12, color: Colors.white),
                               ),
                             ))
-                            .toList() 
                           ]
                         ),
                         Padding(padding: EdgeInsetsGeometry.directional(end: 15)),
@@ -307,173 +307,181 @@ class AccountPageState extends State<AccountPage> {
                                     },
                                   ),
                                 ),
-                                GestureDetector(
-                                  onTap: () {
-                                    showDialog(context: context, builder: (BuildContext context) {
-                                       _tagController.text = item.tags!;
-                                       pickerColor = Colors.black;
-                                      return AlertDialog(
-                                        title: Text("Edit Tag for ${item.name}"),
-                                        actions: [
-                                          TextField(
-                                            decoration: InputDecoration(
-                                              label: const Text("Tag Name"),
-                                            ),
-                                            controller: _tagController,
-                                            autofocus: true,
-                                            onSubmitted: (value) async{
-                                              String hexColor = colorToHex(pickerColor);
-                                              SequenceAccount updatedAccount = SequenceAccount(
-                                                id: item.id, 
-                                                balance: item.balance,
-                                                name: item.name,
-                                                type: item.type,
-                                                color: hexColor,
-                                                lastsync: item.lastsync,
-                                                hidden: item.hidden,
-                                                tags: value,
-                                                orderIndex: item.orderIndex
-                                              );
-                                              await DatabaseHelper().updateAccount(updatedAccount);
-                                              loadAccounts();
-                                              _tagController.clear();
-                                              Navigator.of(context).pop();
-                                              Navigator.of(context).pop();
-                                            },
+                                FutureBuilder<List<Tag>>(
+                                  future: DatabaseHelper().fetchTagsByType('account'),
+                                  builder: (context, snapshot) {
+                                    if (!snapshot.hasData) return CircularProgressIndicator();
+                                    final tagsList = snapshot.data!;
+                                    final currentTags = item.tags?.split(',').map((t) => t.trim()).toList() ?? [];
+                                    final filteredTags = tagsList.where((tag) => !currentTags.contains(tag.name)).toList();
+                                    return Column(
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.only(left: 15),
+                                          child: Align(alignment: Alignment.centerLeft,
+                                            child: Text("Current Tag"),
                                           ),
-                                          Padding(padding: EdgeInsetsGeometry.directional(bottom: 15)),
-                                          ColorPicker(
-                                            pickerColor: pickerColor, 
-                                            onColorChanged: updateColor,
-                                            displayThumbColor: true,
-                                          ),
-                                          TextButton(
-                                            onPressed: () async {
-                                              String hexColor = colorToHex(pickerColor);
-                                              SequenceAccount updatedAccount = SequenceAccount(
-                                                id: item.id, 
-                                                balance: item.balance,
-                                                name: item.name,
-                                                type: item.type,
-                                                color: hexColor,
-                                                  lastsync: item.lastsync,
-                                                  hidden: item.hidden,
-                                                tags: _tagController.text,
-                                                orderIndex: item.orderIndex
-                                              );
-                                              await DatabaseHelper().updateAccount(updatedAccount);
-                                              loadAccounts();
-                                              _tagController.clear();
-                                              Navigator.of(context).pop();
-                                              Navigator.of(context).pop();
-                                            },
-                                            child: const Text("Done"),
-                                          ),
-                                        ],
-                                      );
-                                    }); 
-                                  },
-                                  child: Wrap(
-                                    spacing: 8,
-                                    runSpacing: 4,
-                                    children: [
-                                      ...(item.tags ?? '')
-                                      .split(',')
-                                      .where((tag) => tag.trim().isNotEmpty)
-                                      .map((tag) => Container(
-                                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                        decoration: BoxDecoration(
-                                          color: hexToColor(item.color!),
-                                          borderRadius: BorderRadius.circular(20),
-                                          border: Border.all(color: hexToColor(item.color!)),
                                         ),
-                                        child: Text(
-                                          tag.trim(),
-                                          style: TextStyle(fontSize: 12, color: Colors.white),
-                                        ),
-                                      ))
-                                      .toList(),
-                                    ]
-                                  ),
-                                ),
-                                if ((item.tags ?? '').trim().isEmpty)
-                                  GestureDetector(
-                                    onTap: () {
-                                      showDialog(context: context, builder: (BuildContext context) {
-                                        pickerColor = Colors.black;
-                                        return AlertDialog(
-                                          title: Text("Create Tag for ${item.name}"),
-                                          actions: [
-                                            TextField(
-                                              decoration: InputDecoration(
-                                                label: const Text("Tag Name"),
+                                        if (item.tags != null && item.tags!.isNotEmpty)
+                                        GestureDetector(
+                                          onTap: () async {
+                                            final clearedAccount = item.copyWith(tags: null, color: null);
+                                            await DatabaseHelper().updateAccount(clearedAccount);
+                                            selectedTagNotifier.value = null;
+                                            loadAccounts();
+                                          },
+                                          onLongPress: () async {
+                                            final confirmed = await showDialog<bool>(
+                                              context: context,
+                                              builder: (context) => AlertDialog(
+                                                title: Text("Delete '${item.tags}'?"),
+                                                content: Text("This will remove the tag from the database and from any account using it."),
+                                                actions: [
+                                                  TextButton(onPressed: () => Navigator.pop(context, false), child: Text("Cancel")),
+                                                  TextButton(onPressed: () => Navigator.pop(context, true), child: Text("Delete")),
+                                                ],
                                               ),
-                                              controller: _tagController,
-                                              autofocus: true,
-                                              onSubmitted: (value) async{
-                                                String hexColor = colorToHex(pickerColor);
-                                                SequenceAccount updatedAccount = SequenceAccount(
-                                                  id: item.id, 
-                                                  balance: item.balance,
-                                                  name: item.name,
-                                                  type: item.type,
-                                                  color: hexColor,
-                                                  lastsync: item.lastsync,
-                                                  hidden: item.hidden,
-                                                  tags: value,
-                                                  orderIndex: item.orderIndex
+                                            );
+                                            if (confirmed == true) {
+                                              await DatabaseHelper().deleteTag(item.tags!, 'account');
+                                              await DatabaseHelper().clearTagFromAccounts(item.tags!);
+                                              selectedTagNotifier.value = null;
+                                              loadAccounts();
+                                            }
+                                          },
+                                          child: Container(
+                                            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                            decoration: BoxDecoration(
+                                              color: hexToColor(item.color ?? '#000000'),
+                                              borderRadius: BorderRadius.circular(20),
+                                              border: Border.all(color: hexToColor(item.color ?? '#000000')),
+                                            ),
+                                            child: Text(
+                                              item.tags!,
+                                              style: TextStyle(fontSize: 12, color: Colors.white),
+                                            ),
+                                          ),
+                                        ),
+                                        Divider(thickness: 1.5,),
+                                        Padding(
+                                          padding: const EdgeInsetsGeometry.directional(start: 15, end: 15),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Padding(
+                                                padding: const EdgeInsets.only(bottom: 15),
+                                                child: Align(
+                                                  alignment: Alignment.center,
+                                                  child: Text("Suggested tags"),
+                                                ),
+                                              ),
+                                              Spacer(),
+                                              GestureDetector(
+                                                onTap: () {
+                                                  showDialog(context: context, builder: (BuildContext context) {
+                                                    return AlertDialog(
+                                                      title: Text("Create tag for ${item.name}"),
+                                                      content: Column(
+                                                        mainAxisSize: MainAxisSize.min,
+                                                        children: [
+                                                          TextField(
+                                                            decoration: InputDecoration(labelText: "Tag Name"),
+                                                            controller: _tagController,
+                                                            autofocus: true,
+                                                          ),
+                                                          const SizedBox(height: 15),
+                                                          ColorPicker(
+                                                            pickerColor: pickerColor,
+                                                            onColorChanged: updateColor,
+                                                            displayThumbColor: true,
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      actions: [
+                                                        TextButton(
+                                                          onPressed: () async {
+                                                            final tagName = _tagController.text.trim();
+                                                            final hexColor = colorToHex(pickerColor);
+                                                            if (tagName.isEmpty) return;
+                                                            await DatabaseHelper().createTag(tagName, 'account', hexColor);
+                                                            final updatedAccount = item.copyWith(
+                                                              tags: tagName,
+                                                              color: hexColor,
+                                                            );
+                                                            await DatabaseHelper().updateAccount(updatedAccount);
+                                                            loadAccounts();
+                                                            _tagController.clear();
+                                                            Navigator.of(context).pop();
+                                                            Navigator.of(context).pop();
+                                                          },
+                                                          child: Text("Save"),
+                                                        )
+                                                      ],
+                                                    );
+                                                  });
+                                                },
+                                                child: Container(
+                                                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.blueAccent,
+                                                    borderRadius: BorderRadius.circular(20),
+                                                  ),
+                                                  child: Text(
+                                                    'Add Tag',
+                                                    style: TextStyle(fontSize: 12, color: Colors.white),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Wrap(
+                                          spacing: 8,
+                                          runSpacing: 4,
+                                          children: [
+                                            ...filteredTags.map((tag) => GestureDetector(
+                                              onLongPress: () async {
+                                                final confirm = await showDialog<bool>(context: context, builder: (context) => AlertDialog(
+                                                  title: Text("Delete '${tag.name}' tag?"),
+                                                  content: Text("This will remove the tag from the database and from any account that uses it."),
+                                                  actions: [
+                                                    TextButton(onPressed: () => Navigator.pop(context, false), child: Text("Cancel")),
+                                                    TextButton(onPressed: () => Navigator.pop(context, true), child: Text("Delete")),
+                                                  ],
+                                                ));
+                                                if (confirm == true) {
+                                                  await DatabaseHelper().deleteTag(tag.name, tag.type);
+                                                  await DatabaseHelper().clearTagFromAccounts(tag.name);
+                                                  loadAccounts();
+                                                }
+                                              },
+                                              onTap: () async {
+                                                final updatedAccount = item.copyWith(
+                                                  tags: tag.name,
+                                                  color: tag.color,
                                                 );
                                                 await DatabaseHelper().updateAccount(updatedAccount);
                                                 loadAccounts();
-                                                _tagController.clear();
-                                                Navigator.of(context).pop();
-                                                Navigator.of(context).pop();
                                               },
-                                            ),
-                                            Padding(padding: EdgeInsetsGeometry.directional(bottom: 15)),
-                                            ColorPicker(
-                                              pickerColor: pickerColor, 
-                                              onColorChanged: updateColor,
-                                              displayThumbColor: true,
-                                            ),
-                                            TextButton(
-                                              onPressed: () async {
-                                                String hexColor = colorToHex(pickerColor);
-                                                SequenceAccount updatedAccount = SequenceAccount(
-                                                  id: item.id, 
-                                                  balance: item.balance,
-                                                  name: item.name,
-                                                  type: item.type,
-                                                  color: hexColor,
-                                                  lastsync: item.lastsync,
-                                                  hidden: item.hidden,
-                                                  tags: _tagController.text,
-                                                  orderIndex: item.orderIndex
-                                                );
-                                                await DatabaseHelper().updateAccount(updatedAccount);
-                                                loadAccounts();
-                                                _tagController.clear();
-                                                Navigator.of(context).pop();
-                                                Navigator.of(context).pop();
-                                              },
-                                              child: const Text("Done"),
-                                            ),
+                                              child: Container(
+                                                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                                decoration: BoxDecoration(
+                                                  color: hexToColor(tag.color),
+                                                  borderRadius: BorderRadius.circular(20),
+                                                  border: Border.all(color: hexToColor(tag.color)),
+                                                ),
+                                                child: Text(
+                                                  tag.name,
+                                                  style: TextStyle(fontSize: 12, color: Colors.white),
+                                                ),
+                                              ),
+                                            )),
                                           ],
-                                        );
-                                      });
-                                    },
-                                    child: Container(
-                                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                      decoration: BoxDecoration(
-                                        color: Colors.blueAccent,
-                                      borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Text(
-                                        'Add Tag',
-                                        style: TextStyle(fontSize: 12, color: Colors.black87),
-                                      ),
-                                    ),
-                                  ),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                )
                               ],
                             )
                           );       

@@ -5,14 +5,18 @@ class Rule {
   final String timestamp;
   final String token;
   final int orderIndex;
+  final String? tags;   // ⬅️ new: optional tags field
+  final String? color;  // ⬅️ new: optional color field
 
   Rule({
-    this.id, 
-    required this.name, 
-    required this.ruleId, 
-    required this.timestamp, 
+    this.id,
+    required this.name,
+    required this.ruleId,
+    required this.timestamp,
     required this.token,
     this.orderIndex = 0,
+    this.tags,
+    this.color,
   });
 
   Map<String, dynamic> toMap() => {
@@ -22,15 +26,19 @@ class Rule {
     'timestamp': timestamp,
     'token': token,
     'order_index': orderIndex,
+    'tags': tags,
+    'color': color,
   };
 
   factory Rule.fromMap(Map<String, dynamic> map) => Rule(
-    id: map['id'],
-    name: map['name'],
-    ruleId: map['ruleId'],
-    timestamp: map['timestamp'],
-    token: map['token'],
-    orderIndex: map['order_index'] ?? 0,
+    id: map['id'] as int?,
+    name: map['name'] as String,
+    ruleId: map['ruleId'] as String,
+    timestamp: map['timestamp'] as String,
+    token: map['token'] as String,
+    orderIndex: map['order_index'] as int? ?? 0,
+    tags: map['tags'] as String?,
+    color: map['color'] as String?,
   );
 
   Rule copyWith({
@@ -40,6 +48,8 @@ class Rule {
     String? timestamp,
     String? token,
     int? orderIndex,
+    String? tags,
+    String? color,
   }) {
     return Rule(
       id: id ?? this.id,
@@ -48,6 +58,8 @@ class Rule {
       timestamp: timestamp ?? this.timestamp,
       token: token ?? this.token,
       orderIndex: orderIndex ?? this.orderIndex,
+      tags: tags ?? this.tags,
+      color: color ?? this.color,
     );
   }
 }
