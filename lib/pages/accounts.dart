@@ -433,7 +433,7 @@ class AccountPageState extends State<AccountPage> {
                                                     child: Container(
                                                       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                                       decoration: BoxDecoration(
-                                                        color: Colors.lightBlueAccent.shade100,
+                                                        color: Theme.of(context).colorScheme.primary,
                                                         borderRadius: BorderRadius.circular(20),
                                                       ),
                                                       child: Text(
