@@ -64,68 +64,71 @@ class _TransferRulesState extends State<TransferRules>{
       floatingActionButton: IconButton.filled(
         onPressed: () async {
           await showModalBottomSheet(context: context, builder: (BuildContext context){
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(padding: EdgeInsetsGeometry.directional(top: 15)),
-                Center(
-                  child: const Text("Trigger a Rule"),
-                ),
-                Padding(
-                  padding: EdgeInsetsGeometry.directional(start: 15, end: 15),
-                  child: TextField(
-                    controller: _nameController,
-                    decoration: InputDecoration(
-                      label: const Text("Name"),
+            return SizedBox(
+              height: 300,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(padding: EdgeInsetsGeometry.directional(top: 15)),
+                  Center(
+                    child: const Text("Trigger a Rule"),
+                  ),
+                  Padding(
+                    padding: EdgeInsetsGeometry.directional(start: 15, end: 15),
+                    child: TextField(
+                      controller: _nameController,
+                      decoration: InputDecoration(
+                        label: const Text("Name"),
+                      ),
                     ),
                   ),
-                ),
-                Padding(
-                  padding: EdgeInsetsGeometry.directional(start: 15, end: 15),
-                  child: TextField(
-                    controller: _ruleController,
-                    decoration: InputDecoration(
-                      label: const Text("Rule ID")
+                  Padding(
+                    padding: EdgeInsetsGeometry.directional(start: 15, end: 15),
+                    child: TextField(
+                      controller: _ruleController,
+                      decoration: InputDecoration(
+                        label: const Text("Rule ID")
+                      ),
                     ),
                   ),
-                ),
-                Padding(
-                  padding: EdgeInsetsGeometry.directional(start: 15, end: 15),
-                  child: TextField(
-                    controller: _tokencontroller,
-                    decoration: InputDecoration(
-                      label: const Text("Token")
+                  Padding(
+                    padding: EdgeInsetsGeometry.directional(start: 15, end: 15),
+                    child: TextField(
+                      controller: _tokencontroller,
+                      decoration: InputDecoration(
+                        label: const Text("Token")
+                      ),
                     ),
                   ),
-                ),
-                Padding(
-                  padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-                  child: TextButton(
-                    onPressed: () async {
-                      ruleId = _ruleController.text;
-                      name = _nameController.text;
-                      final rawToken = _tokencontroller.text;
-                      final encryptedToken = await SecretService.instance.encryptToken(rawToken);
-                      final db = await DatabaseHelper().database;
-                      final maxOrderResult = await db.rawQuery('SELECT MAX(order_index) as max_order FROM rules');
-                      final maxOrder = maxOrderResult.first['max_order'] as int? ?? -1;
-                      await db.insert('rules', {
-                        'name': name,
-                        'ruleid': ruleId,
-                        'timestamp': 'Never',
-                        'token': encryptedToken,
-                        'order_index': maxOrder + 1,
-                      });
-                      await _loadRules();
-                      _nameController.clear();
-                      _ruleController.clear();
-                      _tokencontroller.clear();
-                      Navigator.pop(context);
-                    },
-                    child: const Text("Save Trigger")
-                  ),
-                )
-              ],
+                  Padding(
+                    padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                    child: TextButton(
+                      onPressed: () async {
+                        ruleId = _ruleController.text;
+                        name = _nameController.text;
+                        final rawToken = _tokencontroller.text;
+                        final encryptedToken = await SecretService.instance.encryptToken(rawToken);
+                        final db = await DatabaseHelper().database;
+                        final maxOrderResult = await db.rawQuery('SELECT MAX(order_index) as max_order FROM rules');
+                        final maxOrder = maxOrderResult.first['max_order'] as int? ?? -1;
+                        await db.insert('rules', {
+                          'name': name,
+                          'ruleid': ruleId,
+                          'timestamp': 'Never',
+                          'token': encryptedToken,
+                          'order_index': maxOrder + 1,
+                        });
+                        await _loadRules();
+                        _nameController.clear();
+                        _ruleController.clear();
+                        _tokencontroller.clear();
+                        Navigator.pop(context);
+                      },
+                      child: const Text("Save Trigger")
+                    ),
+                  )
+                ],
+              ),
             );
           });
         }, 
@@ -167,95 +170,98 @@ class _TransferRulesState extends State<TransferRules>{
                 showModalBottomSheet(context: context, builder: (BuildContext context) {
                   return Padding(
                     padding: const EdgeInsets.all(20),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Center(
-                          child: Text("Edit"),
-                        ),
-                        Padding(
-                          padding: EdgeInsetsGeometry.directional(start: 15, end: 15),
-                          child: TextField(
-                            controller: _nameController,
-                            decoration: InputDecoration(
-                              label: const Text("Name"),
-                            ),
+                    child: SizedBox(
+                      height: 300,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Center(
+                            child: Text("Edit"),
                           ),
-                        ),
-                        Padding(
-                          padding: EdgeInsetsGeometry.directional(start: 15, end: 15),
-                          child: TextField(
-                            controller: _ruleController,
-                            decoration: InputDecoration(
-                              label: const Text("Rule ID")
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsetsGeometry.directional(start: 15, end: 15),
-                          child: TextField(
-                            controller: _tokencontroller,
-                            decoration: InputDecoration(
-                              label: const Text("Token")
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-                          child: Row(
-                            children: [
-                              Spacer(flex: 1,),
-                              TextButton(
-                                onPressed: () async {
-                                  final db = await DatabaseHelper().database;
-                                  await db.delete(
-                                    'rules',
-                                    where: 'id = ?',
-                                    whereArgs: [rule.id],
-                                  );
-                                  final updatedRules = await DatabaseHelper().getRules();
-                                  setState(() {
-                                    rules = updatedRules;
-                                  });
-                                  Navigator.pop(context);
-                                }, 
-                                child: Text("Delete")
+                          Padding(
+                            padding: EdgeInsetsGeometry.directional(start: 15, end: 15),
+                            child: TextField(
+                              controller: _nameController,
+                              decoration: InputDecoration(
+                                label: const Text("Name"),
                               ),
-                              Spacer(flex: 1,),
-                              TextButton(
-                                onPressed: () async {
-                                  final updatedName = _nameController.text;
-                                  final updatedRuleId = _ruleController.text;
-                                  final rawToken = _tokencontroller.text;
-                                  final encryptedToken = await SecretService.instance.encryptToken(rawToken);
-                                  final db = await DatabaseHelper().database;
-                                  await db.update(
-                                    'rules',
-                                    {
-                                      'name': updatedName,
-                                      'ruleid': updatedRuleId,
-                                      'token': encryptedToken,
-                                      'timestamp': rule.timestamp,
-                                    },
-                                    where: 'id = ?',
-                                    whereArgs: [rule.id],
-                                  );
-                                  final updatedRules = await DatabaseHelper().getRules();
-                                  setState(() {
-                                    rules = updatedRules;
-                                  });
-                                  _nameController.clear();
-                                  _ruleController.clear();
-                                  _tokencontroller.clear();
-                                  Navigator.pop(context);
-                                },
-                                child: Text("Save") 
-                              ),
-                              Spacer(flex: 1,)
-                            ],
+                            ),
                           ),
-                        ),
-                      ],
+                          Padding(
+                            padding: EdgeInsetsGeometry.directional(start: 15, end: 15),
+                            child: TextField(
+                              controller: _ruleController,
+                              decoration: InputDecoration(
+                                label: const Text("Rule ID")
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsetsGeometry.directional(start: 15, end: 15),
+                            child: TextField(
+                              controller: _tokencontroller,
+                              decoration: InputDecoration(
+                                label: const Text("Token")
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                            child: Row(
+                              children: [
+                                Spacer(flex: 1,),
+                                TextButton(
+                                  onPressed: () async {
+                                    final db = await DatabaseHelper().database;
+                                    await db.delete(
+                                      'rules',
+                                      where: 'id = ?',
+                                      whereArgs: [rule.id],
+                                    );
+                                    final updatedRules = await DatabaseHelper().getRules();
+                                    setState(() {
+                                      rules = updatedRules;
+                                    });
+                                    Navigator.pop(context);
+                                  }, 
+                                  child: Text("Delete")
+                                ),
+                                Spacer(flex: 1,),
+                                TextButton(
+                                  onPressed: () async {
+                                    final updatedName = _nameController.text;
+                                    final updatedRuleId = _ruleController.text;
+                                    final rawToken = _tokencontroller.text;
+                                    final encryptedToken = await SecretService.instance.encryptToken(rawToken);
+                                    final db = await DatabaseHelper().database;
+                                    await db.update(
+                                      'rules',
+                                      {
+                                        'name': updatedName,
+                                        'ruleid': updatedRuleId,
+                                        'token': encryptedToken,
+                                        'timestamp': rule.timestamp,
+                                      },
+                                      where: 'id = ?',
+                                      whereArgs: [rule.id],
+                                    );
+                                    final updatedRules = await DatabaseHelper().getRules();
+                                    setState(() {
+                                      rules = updatedRules;
+                                    });
+                                    _nameController.clear();
+                                    _ruleController.clear();
+                                    _tokencontroller.clear();
+                                    Navigator.pop(context);
+                                  },
+                                  child: Text("Save") 
+                                ),
+                                Spacer(flex: 1,)
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 });

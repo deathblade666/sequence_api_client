@@ -433,12 +433,12 @@ class AccountPageState extends State<AccountPage> {
                                                     child: Container(
                                                       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                                       decoration: BoxDecoration(
-                                                        color: Colors.blueAccent,
+                                                        color: Colors.lightBlueAccent.shade100,
                                                         borderRadius: BorderRadius.circular(20),
                                                       ),
                                                       child: Text(
-                                                        'Add Tag',
-                                                        style: TextStyle(fontSize: 12, color: Colors.white),
+                                                        'Create New Tag',
+                                                        style: TextStyle(fontSize: 12, color: Colors.black),
                                                       ),
                                                     ),
                                                   ),
