@@ -110,6 +110,14 @@ class DatabaseHelper {
         }
         if (oldVersion < 6){
           await db.execute('''
+          CREATE TABLE tags (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT,
+          color TEXT,
+          type TEXT
+          )
+        ''');
+          await db.execute('''
             ALTER TABLE rules ADD COLUMN tags TEXT;
           ''');
           await db.execute('''
@@ -135,6 +143,7 @@ class DatabaseHelper {
           await db.execute('DROP TABLE accounts');
           await db.execute('ALTER TABLE accounts_new RENAME TO accounts');
           clearAccountTagsAndColors();
+          
         }
       }
     );
