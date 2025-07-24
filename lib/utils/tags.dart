@@ -1,5 +1,5 @@
 class Tag {
-  final int? id; // optional ID for DB retrieval
+  final int? id;
   final String name;
   final String color;
   final String type;

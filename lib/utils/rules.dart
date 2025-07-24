@@ -5,8 +5,8 @@ class Rule {
   final String timestamp;
   final String token;
   final int orderIndex;
-  final String? tags;   // ⬅️ new: optional tags field
-  final String? color;  // ⬅️ new: optional color field
+  String? tags;
+  String? color;
 
   Rule({
     this.id,
@@ -49,7 +49,7 @@ class Rule {
     String? token,
     int? orderIndex,
     String? tags,
-    String? color,
+    String? color
   }) {
     return Rule(
       id: id ?? this.id,
@@ -58,8 +58,8 @@ class Rule {
       timestamp: timestamp ?? this.timestamp,
       token: token ?? this.token,
       orderIndex: orderIndex ?? this.orderIndex,
-      tags: tags ?? this.tags,
-      color: color ?? this.color,
+      tags: tags,
+      color: color
     );
   }
 }

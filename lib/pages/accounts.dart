@@ -382,7 +382,7 @@ class AccountPageState extends State<AccountPage> {
                                                     padding: const EdgeInsets.only(bottom: 15),
                                                     child: Align(
                                                       alignment: Alignment.center,
-                                                      child: Text("Suggested tags"),
+                                                      child: Text("Available tags"),
                                                     ),
                                                   ),
                                                   Spacer(),

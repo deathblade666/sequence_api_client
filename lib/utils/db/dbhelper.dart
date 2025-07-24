@@ -54,7 +54,9 @@ class DatabaseHelper {
             ruleid TEXT NOT NULL,
             timestamp TEXT NOT NULL,
             token TEXT NOT NULL,
-            order_index INTEGER DEFAULT 0
+            order_index INTEGER DEFAULT 0,
+            color TEXT,
+            tags TEXT
           )
         ''');
         await db.execute('''
@@ -272,17 +274,20 @@ Future<void> clearAccountTagsAndColors() async {
   }
 
   Future<List<Rule>> getRules() async {
-    final db = await database;
-    final result = await db.query('rules', orderBy: 'order_index ASC');
-    return result.map((r) => Rule(
-      id: r['id'] as int?,
-      name: r['name'] as String,
-      ruleId: r['ruleid'] as String,
-      timestamp: r['timestamp'] as String,
-      token: r['token'] as String,
-      orderIndex: r['order_index'] as int? ?? 0,
-    )).toList();
-  }
+  final db = await database;
+  final result = await db.query('rules', orderBy: 'order_index ASC');
+  return result.map((r) => Rule(
+    id: r['id'] as int?,
+    name: r['name'] as String,
+    ruleId: r['ruleid'] as String,
+    timestamp: r['timestamp'] as String,
+    token: r['token'] as String,
+    orderIndex: r['order_index'] as int? ?? 0,
+    tags: r['tags'] as String?,
+    color: r['color'] as String?,
+  )).toList();
+}
+
 
   Future<int> updateRule(Rule rule) async {
     final db = await database;
@@ -294,6 +299,8 @@ Future<void> clearAccountTagsAndColors() async {
         'token': rule.token,
         'timestamp': rule.timestamp,
         'order_index': rule.orderIndex,
+        'color': rule.color,
+        'tags': rule.tags
       },
       where: 'id = ?',
       whereArgs: [rule.id],
@@ -388,6 +395,26 @@ Future<void> clearTagFromAccounts(String tagName) async {
     );
   }
 }
+Future<void> clearTagFromRule(String tagName) async {
+  final db = await database;
+
+  final result = await db.query(
+    'rules',
+    where: 'tags = ?',
+    whereArgs: [tagName],
+  );
+
+  for (final row in result) {
+    final ruleId = row['id'] as int;
+    await db.update(
+      'rules',
+      {'tags': null, 'color': null},
+      where: 'id = ?',
+      whereArgs: [ruleId],
+    );
+  }
+}
+
 
 
 }
