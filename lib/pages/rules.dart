@@ -27,6 +27,7 @@ class _TransferRulesState extends State<TransferRules>{
   String lastRan = "Never";
   String apitoken = "";
   bool obscure = true;
+  bool obscureEdit = true;
   Color pickerColor = Colors.transparent;
   TextEditingController _tagController = TextEditingController();
 
@@ -82,6 +83,13 @@ class _TransferRulesState extends State<TransferRules>{
     setState(() => pickerColor = color);
   }
 
+  void close (){
+    _nameController.clear();
+    _ruleController.clear();
+    _tokencontroller.clear();
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -117,10 +125,7 @@ class _TransferRulesState extends State<TransferRules>{
                                 'order_index': maxOrder + 1,
                               });
                               await _loadRules();
-                              _nameController.clear();
-                              _ruleController.clear();
-                              _tokencontroller.clear();
-                              Navigator.pop(context);
+                              close();
                             }, 
                             icon: Icon(Icons.save)
                           ),
@@ -236,6 +241,7 @@ class _TransferRulesState extends State<TransferRules>{
                 _tokencontroller.text = decryptedToken!;
                 showModalBottomSheet(context: context, builder: (BuildContext context) {
                   Rule localItem = rule;
+                  return StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
                   return Padding(
                     padding: const EdgeInsets.all(20),
                     child: SizedBox(
@@ -258,7 +264,7 @@ class _TransferRulesState extends State<TransferRules>{
                                   setState(() {
                                     rules = updatedRules;
                                   });
-                                  Navigator.pop(context);
+                                  close();
                                 }, 
                                 icon: Icon(Icons.delete)
                               ),
@@ -285,10 +291,7 @@ class _TransferRulesState extends State<TransferRules>{
                                   setState(() {
                                     rules = updatedRules;
                                   });
-                                  _nameController.clear();
-                                  _ruleController.clear();
-                                  _tokencontroller.clear();
-                                  Navigator.pop(context);
+                                  close();
                                 }, 
                                 icon: Icon(Icons.save),
                               ),
@@ -317,8 +320,21 @@ class _TransferRulesState extends State<TransferRules>{
                             padding: EdgeInsetsGeometry.directional(start: 15, end: 15, bottom: 15),
                             child: TextField(
                               controller: _tokencontroller,
+                              obscureText: obscureEdit,
                               decoration: InputDecoration(
-                                label: const Text("Token")
+                                label: const Text("Token"),
+                                suffix: IconButton(
+                                  icon: Icon(Icons.remove_red_eye),
+                                  onPressed: (){
+                                    setState((){
+                                      if (obscureEdit == true){
+                                        obscureEdit = false;
+                                      } else if (obscureEdit == false){
+                                        obscureEdit = true;
+                                      }
+                                    });
+                                  },
+                                )
                               ),
                             ),
                           ),
@@ -429,7 +445,7 @@ class _TransferRulesState extends State<TransferRules>{
                                                       _loadRules();
                                                       _tagController.clear();
                                                       Navigator.of(context).pop();
-                                                      Navigator.of(context).pop();
+                                                      close();
                                                     },
                                                     child: Text("Save"),
                                                   )
@@ -512,6 +528,7 @@ class _TransferRulesState extends State<TransferRules>{
                       )
                     )
                   );
+                  });
                 });
               },
               onTap: () async {
