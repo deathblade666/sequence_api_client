@@ -118,7 +118,7 @@ class SequenceAccount {
       hidden: false,
       orderIndex: null,
       lastsync: null,
-      color: '#00000000',
+      color: null,
       tags: null,
     );
   }
@@ -171,8 +171,8 @@ extension SequenceAccountCopy on SequenceAccount {
       id: id ?? this.id,
       orderIndex: orderIndex ?? this.orderIndex,
       lastsync: lastsync ?? this.lastsync,
-      color: color ?? this.color,
-      tags: tags ?? this.tags
+      color: color,
+      tags: tags
     );
   }
 }
