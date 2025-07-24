@@ -239,7 +239,7 @@ class _TransferRulesState extends State<TransferRules>{
                 _nameController.text = rule.name;
                 _ruleController.text = rule.ruleId;
                 _tokencontroller.text = decryptedToken!;
-                showModalBottomSheet(context: context, builder: (BuildContext context) {
+                showModalBottomSheet(enableDrag: false ,isDismissible: false, context: context, builder: (BuildContext context) {
                   Rule localItem = rule;
                   return StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
                   return Padding(
