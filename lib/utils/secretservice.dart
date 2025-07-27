@@ -8,8 +8,9 @@ import 'package:sqflite/sqflite.dart';
 class SecretService {
   static SecretService? _instance;
   final encrypt.Encrypter _encrypter;
-  static final encrypt.IV _iv = encrypt.IV.fromUtf8(dotenv.env['ENCRYPTION_IV']!);
-
+  static final encrypt.IV _iv = encrypt.IV.fromUtf8(
+    dotenv.env['ENCRYPTION_IV']!,
+  );
 
   final _dbHelper = DatabaseHelper();
 
@@ -28,7 +29,9 @@ class SecretService {
 
   static SecretService get instance {
     if (_instance == null) {
-      throw Exception("SecretService not initialized. Call SecretService.init() first.");
+      throw Exception(
+        "SecretService not initialized. Call SecretService.init() first.",
+      );
     }
     return _instance!;
   }
@@ -36,20 +39,15 @@ class SecretService {
   Future<void> saveToken(String token) async {
     final encrypted = _encrypter.encrypt(token.trim(), iv: _iv).base64;
     final db = await _dbHelper.database;
-    await db.insert(
-      'secrets',
-      {'id': 1, 'secret': encrypted},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('secrets', {
+      'id': 1,
+      'secret': encrypted,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<String?> getToken() async {
     final db = await _dbHelper.database;
-    final result = await db.query(
-      'secrets',
-      where: 'id = ?',
-      whereArgs: [1],
-    );
+    final result = await db.query('secrets', where: 'id = ?', whereArgs: [1]);
     if (result.isNotEmpty) {
       final encrypted = result.first['secret'] as String;
       try {
@@ -95,7 +93,6 @@ class SecretService {
     return base64Regex.hasMatch(trimmed);
   }
 
-
   Future<bool> isTokenEncrypted(String token) async {
     final cleaned = token.trim();
     if (!_isBase64Safe(cleaned)) return false;
@@ -107,4 +104,3 @@ class SecretService {
     }
   }
 }
-

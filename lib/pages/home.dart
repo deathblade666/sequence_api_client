@@ -18,10 +18,10 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final GlobalKey<AccountPageState> accountPageKey = GlobalKey<AccountPageState>();
+  final GlobalKey<AccountPageState> accountPageKey =
+      GlobalKey<AccountPageState>();
   String pageName = "Accounts";
   Icon filterIcon = Icon(Icons.filter_alt);
-  
 
   @override
   Widget build(BuildContext context) {
@@ -34,41 +34,47 @@ class _HomePageState extends State<HomePage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Spacer(flex: 1,),
+                  Spacer(flex: 1),
                   const Text("Rule History"),
-                  Spacer(flex: 1,),
+                  Spacer(flex: 1),
                   IconButton(
                     icon: Icon(Icons.delete),
-                    onPressed: (){
-                      Provider.of<HistoryProvider>(context, listen: false).clearHistory();
+                    onPressed: () {
+                      Provider.of<HistoryProvider>(
+                        context,
+                        listen: false,
+                      ).clearHistory();
                     },
                   ),
                 ],
               ),
               Expanded(
-                child: Consumer<HistoryProvider>(builder: (context, historyProvider, _) {
-                  final history = historyProvider.items;
-                  if (history.isEmpty) {
-                    return const Center(child: Text("No history yet"));
-                  }
-                  return ListView.builder(
-                    itemCount: history.length,
-                    itemBuilder: (context, index) {
-                      final item = history[index];
-                      return ListTile(
-                        title: Text(item.name),
-                        subtitle: Text(
-                          DateFormat('yyyy-MM-dd hh:mm a')
-                          .format(DateTime.parse(item.timestamp)),
-                        ),
-                      );
+                child: Consumer<HistoryProvider>(
+                  builder: (context, historyProvider, _) {
+                    final history = historyProvider.items;
+                    if (history.isEmpty) {
+                      return const Center(child: Text("No history yet"));
                     }
-                  );
-                }),
+                    return ListView.builder(
+                      itemCount: history.length,
+                      itemBuilder: (context, index) {
+                        final item = history[index];
+                        return ListTile(
+                          title: Text(item.name),
+                          subtitle: Text(
+                            DateFormat(
+                              'yyyy-MM-dd hh:mm a',
+                            ).format(DateTime.parse(item.timestamp)),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
-            ]
-          )
-        )
+            ],
+          ),
+        ),
       ),
       appBar: AppBar(
         title: Text(pageName),
@@ -77,7 +83,7 @@ class _HomePageState extends State<HomePage> {
           if (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
             IconButton(
               onPressed: () async {
-               accountPageKey.currentState?.refreshAccounts();
+                accountPageKey.currentState?.refreshAccounts();
               },
               icon: Icon(Icons.refresh),
             ),
@@ -86,43 +92,42 @@ class _HomePageState extends State<HomePage> {
               onPressed: () async {
                 final _accounts = await DatabaseHelper().getAccounts();
                 final accountTags = _accounts
-                  .map((account) => account.tags)
-                  .where((tags) => tags != null && tags.isNotEmpty)
-                  .toSet()
-                  .toList();
+                    .map((account) => account.tags)
+                    .where((tags) => tags != null && tags.isNotEmpty)
+                    .toSet()
+                    .toList();
                 final selectedTag = await showMenu<String?>(
                   context: context,
                   position: RelativeRect.fromLTRB(100, 100, 0, 0),
                   items: [
-                    PopupMenuItem<String?>(
-                      value: null,
-                      child: Text('None'),
+                    PopupMenuItem<String?>(value: null, child: Text('None')),
+                    ...accountTags.map(
+                      (tag) =>
+                          PopupMenuItem<String?>(value: tag, child: Text(tag!)),
                     ),
-                    ...accountTags.map((tag) => PopupMenuItem<String?>(
-                      value: tag,
-                      child: Text(tag!),
-                    )),
                   ],
                 );
                 if (selectedTag != selectedTagNotifier.value) {
                   selectedTagNotifier.value = selectedTag;
                 }
-              },             
-              icon: filterIcon
+              },
+              icon: filterIcon,
             ),
         ],
       ),
       body: SafeArea(
-        child: Views(widget.homepageController, accountPageKey: accountPageKey,)
+        child: Views(widget.homepageController, accountPageKey: accountPageKey),
       ),
       bottomNavigationBar: BottomAppBar(
         child: Row(
           children: [
-            Spacer(flex: 1,),
+            Spacer(flex: 1),
             TextButton(
               onPressed: () {
                 setState(() {
-                  widget.homepageController.hasClients ? widget.homepageController.jumpToPage(0) : widget.homepageController.initialPage;
+                  widget.homepageController.hasClients
+                      ? widget.homepageController.jumpToPage(0)
+                      : widget.homepageController.initialPage;
                   pageName = "Accounts";
                 });
               },
@@ -132,7 +137,9 @@ class _HomePageState extends State<HomePage> {
             TextButton(
               onPressed: () {
                 setState(() {
-                  widget.homepageController.hasClients ? widget.homepageController.jumpToPage(1) : widget.homepageController.initialPage;
+                  widget.homepageController.hasClients
+                      ? widget.homepageController.jumpToPage(1)
+                      : widget.homepageController.initialPage;
                   pageName = "Rules";
                 });
               },

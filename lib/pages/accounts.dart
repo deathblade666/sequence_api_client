@@ -38,7 +38,6 @@ class AccountPageState extends State<AccountPage> {
     });
   }
 
-
   Future<void> refreshAccounts() async {
     final token = await secretService.getToken();
     if (token == null || token.isEmpty) {
@@ -94,129 +93,151 @@ class AccountPageState extends State<AccountPage> {
     return '${leadingHashSign ? '#' : ''}$alpha$red$green$blue';
   }
 
-  void updateColor(color){
+  void updateColor(color) {
     setState(() => pickerColor = color);
   }
-
-
 
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       floatingActionButton: IconButton.filled(
         onPressed: () async {
-          final result = await showModalBottomSheet<String>(isScrollControlled: true ,showDragHandle: true ,context: context, builder: (BuildContext context) {
-            Future<List<SequenceAccount>> hiddenAccountsFuture = DatabaseHelper().getHiddenAccounts();
-            return StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
-              return Padding(
-                padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-                child: SizedBox(
-                  height: 500,
-                  child: Column(
-                    children: [
-                      const Text("Settings"),
-                      ExpansionTile(
-                        title: const Text("Sequence API Settings"),
+          final result = await showModalBottomSheet<String>(
+            isScrollControlled: true,
+            showDragHandle: true,
+            context: context,
+            builder: (BuildContext context) {
+              Future<List<SequenceAccount>> hiddenAccountsFuture =
+                  DatabaseHelper().getHiddenAccounts();
+              return StatefulBuilder(
+                builder: (BuildContext context, StateSetter setState) {
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      bottom: MediaQuery.of(context).viewInsets.bottom,
+                    ),
+                    child: SizedBox(
+                      height: 500,
+                      child: Column(
                         children: [
-                          Row(
+                          const Text("Settings"),
+                          ExpansionTile(
+                            title: const Text("Sequence API Settings"),
                             children: [
-                              Flexible(
-                                child: Padding(
-                                  padding: EdgeInsetsGeometry.directional(start: 15),
-                                  child: TextField(
-                                    onSubmitted: (value) async {
-                                      if (value.isEmpty) {
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Padding(
+                                      padding: EdgeInsetsGeometry.directional(
+                                        start: 15,
+                                      ),
+                                      child: TextField(
+                                        onSubmitted: (value) async {
+                                          if (value.isEmpty) {
+                                            await secretService.deleteToken();
+                                          } else {
+                                            await secretService.saveToken(
+                                              value,
+                                            );
+                                          }
+                                          refreshAccounts();
+                                          Navigator.pop(context, value);
+                                        },
+                                        controller: token,
+                                        decoration: InputDecoration(
+                                          suffix: IconButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                if (obscure == true) {
+                                                  obscure = false;
+                                                } else if (obscure == false) {
+                                                  obscure = true;
+                                                }
+                                              });
+                                            },
+                                            icon: Icon(
+                                              Icons.remove_red_eye_outlined,
+                                            ),
+                                          ),
+                                          labelText: "Token",
+                                        ),
+                                        obscureText: obscure,
+                                      ),
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () async {
+                                      final apitoken = token.text;
+                                      if (apitoken.isEmpty) {
                                         await secretService.deleteToken();
                                       } else {
-                                        await secretService.saveToken(value);
+                                        await secretService.saveToken(apitoken);
                                       }
                                       refreshAccounts();
-                                      Navigator.pop(context, value);
+                                      Navigator.pop(context, apitoken);
                                     },
-                                    controller: token,
-                                    decoration: InputDecoration(
-                                      suffix: IconButton(
-                                        onPressed: (){
-                                          setState((){
-                                            if (obscure == true){
-                                              obscure = false;
-                                            } else if (obscure == false){
-                                              obscure = true;
-                                            }
-                                          });
-                                        }, 
-                                        icon: Icon(Icons.remove_red_eye_outlined)
-                                      ),
-                                      labelText: "Token",
-                                    ),
-                                    obscureText: obscure,
-                                  )
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () async {
-                                  final apitoken = token.text;
-                                  if (apitoken.isEmpty) {
-                                    await secretService.deleteToken();
-                                  } else {
-                                    await secretService.saveToken(apitoken);
-                                  }
-                                  refreshAccounts();
-                                  Navigator.pop(context, apitoken);
-                                }, 
-                                child: Text("Save")
+                                    child: Text("Save"),
+                                  ),
+                                ],
                               ),
                             ],
-                          )
+                          ),
+                          Flexible(
+                            child: ExpansionTile(
+                              title: const Text("Hidden Accounts"),
+                              children: [
+                                FutureBuilder<List<SequenceAccount>>(
+                                  future: hiddenAccountsFuture,
+                                  builder: (context, snapshot) {
+                                    if (!snapshot.hasData ||
+                                        snapshot.data!.isEmpty) {
+                                      return Text("No hidden accounts");
+                                    }
+                                    return ConstrainedBox(
+                                      constraints: BoxConstraints(
+                                        maxHeight: 270,
+                                      ),
+                                      child: ListView.builder(
+                                        shrinkWrap: true,
+                                        itemCount: snapshot.data!.length,
+                                        itemBuilder: (context, index) {
+                                          final account = snapshot.data![index];
+                                          return CheckboxListTile(
+                                            title: Text(
+                                              account.name ?? 'Unnamed',
+                                            ),
+                                            value: false,
+                                            onChanged: (val) async {
+                                              final updated = account.copyWith(
+                                                hidden: false,
+                                              );
+                                              await DatabaseHelper()
+                                                  .upsertAccountByName(updated);
+                                              await loadAccounts();
+                                              setState(() {
+                                                hiddenAccountsFuture =
+                                                    DatabaseHelper()
+                                                        .getHiddenAccounts();
+                                              });
+                                            },
+                                          );
+                                        },
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
-                      Flexible( 
-                        child: ExpansionTile(
-                          title: const Text("Hidden Accounts"),
-                          children: [
-                            FutureBuilder<List<SequenceAccount>>(
-                              future: hiddenAccountsFuture,
-                              builder: (context, snapshot) {
-                                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                                  return Text("No hidden accounts");
-                                }
-                                return ConstrainedBox(
-                                  constraints: BoxConstraints(maxHeight: 270),
-                                  child: ListView.builder(
-                                    shrinkWrap: true,
-                                    itemCount: snapshot.data!.length,
-                                    itemBuilder: (context, index) {
-                                      final account = snapshot.data![index];
-                                      return CheckboxListTile(
-                                        title: Text(account.name ?? 'Unnamed'),
-                                        value: false,
-                                        onChanged: (val) async {
-                                          final updated = account.copyWith(hidden: false);
-                                          await DatabaseHelper().upsertAccountByName(updated);
-                                          await loadAccounts();
-                                          setState(() {
-                                            hiddenAccountsFuture = DatabaseHelper().getHiddenAccounts();
-                                          });
-                                        },
-                                      );
-                                    },
-                                  ),
-                                );
-                              },
-                            )
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
-                )
+                    ),
+                  );
+                },
               );
-            });
-          });
+            },
+          );
         },
-        icon: Icon(
-          Icons.settings
-        )
+        icon: Icon(Icons.settings),
       ),
       body: RefreshIndicator(
         onRefresh: refreshAccounts,
@@ -224,11 +245,11 @@ class AccountPageState extends State<AccountPage> {
           valueListenable: selectedTagNotifier,
           builder: (context, selectedTag, _) {
             final filteredAccounts = selectedTag == null
-              ? _accounts
-              : _accounts.where((account) {
-                final tags = account.tags?.split(',') ?? [];
-                return tags.map((t) => t.trim()).contains(selectedTag);
-              }).toList();
+                ? _accounts
+                : _accounts.where((account) {
+                    final tags = account.tags?.split(',') ?? [];
+                    return tags.map((t) => t.trim()).contains(selectedTag);
+                  }).toList();
             return ReorderableListView.builder(
               buildDefaultDragHandles: false,
               itemCount: filteredAccounts.length,
@@ -237,14 +258,18 @@ class AccountPageState extends State<AccountPage> {
                 final item = filteredAccounts[index];
                 final lastSyncString = item.lastsync;
                 final lastSyncFormatted = lastSyncString != null
-                  ? DateFormat('yyyy-MM-dd hh:mma').format(DateTime.parse(lastSyncString))
-                  : 'Never';
+                    ? DateFormat(
+                        'yyyy-MM-dd hh:mma',
+                      ).format(DateTime.parse(lastSyncString))
+                    : 'Never';
                 List<String>? tagList = item.tags?.split(',');
                 return Card(
                   key: ValueKey(item.id),
                   margin: EdgeInsets.symmetric(horizontal: 3, vertical: 3),
                   elevation: 2,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   child: ListTile(
                     leading: ReorderableDragStartListener(
                       index: index,
@@ -260,28 +285,43 @@ class AccountPageState extends State<AccountPage> {
                         Wrap(
                           spacing: 8,
                           runSpacing: 4,
-                          children:[
+                          children: [
                             ...(item.tags ?? '')
-                            .split(',')
-                            .where((tag) => tag.trim().isNotEmpty)
-                            .map((tag) => Container(
-                              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: hexToColor(item.color!),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: hexToColor(item.color!)),
-                              ),
-                              child: Text(
-                                tag.trim(),
-                                style: TextStyle(fontSize: 12, color: Colors.white),
-                              ),
-                            ))
-                          ]
+                                .split(',')
+                                .where((tag) => tag.trim().isNotEmpty)
+                                .map(
+                                  (tag) => Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: hexToColor(item.color!),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: hexToColor(item.color!),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      tag.trim(),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                          ],
                         ),
-                        Padding(padding: EdgeInsetsGeometry.directional(end: 15)),
+                        Padding(
+                          padding: EdgeInsetsGeometry.directional(end: 15),
+                        ),
                         Text(
                           "Last Sync\n$lastSyncFormatted\n",
-                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
                           textAlign: TextAlign.right,
                         ),
                       ],
@@ -296,13 +336,18 @@ class AccountPageState extends State<AccountPage> {
                             child: Column(
                               children: [
                                 Padding(
-                                  padding: const EdgeInsetsGeometry.directional(top: 30),
+                                  padding: const EdgeInsetsGeometry.directional(
+                                    top: 30,
+                                  ),
                                   child: ListTile(
                                     title: Text("Hide ${item.name}?"),
                                     trailing: Icon(Icons.visibility_off),
                                     onTap: () async {
-                                      final updated = item.copyWith(hidden: true);
-                                      await DatabaseHelper().upsertAccountByName(updated);
+                                      final updated = item.copyWith(
+                                        hidden: true,
+                                      );
+                                      await DatabaseHelper()
+                                          .upsertAccountByName(updated);
                                       loadAccounts();
                                       Navigator.pop(context);
                                     },
@@ -310,135 +355,276 @@ class AccountPageState extends State<AccountPage> {
                                 ),
                                 StatefulBuilder(
                                   builder: (context, setState) {
-                                    Future<List<Tag>> futureTags = DatabaseHelper().fetchTagsByType('account');
+                                    Future<List<Tag>> futureTags =
+                                        DatabaseHelper().fetchTagsByType(
+                                          'account',
+                                        );
                                     return FutureBuilder<List<Tag>>(
                                       future: futureTags,
                                       builder: (context, snapshot) {
-                                        if (!snapshot.hasData) return CircularProgressIndicator();
+                                        if (!snapshot.hasData)
+                                          return CircularProgressIndicator();
                                         final tagsList = snapshot.data!;
-                                        final currentTags = localItem.tags?.split(',').map((t) => t.trim()).toList() ?? [];
-                                        final filteredTags = tagsList.where((tag) => !currentTags.contains(tag.name)).toList();
+                                        final currentTags =
+                                            localItem.tags
+                                                ?.split(',')
+                                                .map((t) => t.trim())
+                                                .toList() ??
+                                            [];
+                                        final filteredTags = tagsList
+                                            .where(
+                                              (tag) => !currentTags.contains(
+                                                tag.name,
+                                              ),
+                                            )
+                                            .toList();
                                         return Column(
                                           children: [
                                             Padding(
-                                              padding: const EdgeInsets.only(left: 15),
-                                              child: Align(alignment: Alignment.centerLeft,
+                                              padding: const EdgeInsets.only(
+                                                left: 15,
+                                              ),
+                                              child: Align(
+                                                alignment: Alignment.centerLeft,
                                                 child: Text("Current Tag"),
                                               ),
                                             ),
-                                            if (localItem.tags != null && localItem.tags!.isNotEmpty)
-                                            GestureDetector(
-                                              onTap: () async {
-                                                final clearedAccount = localItem.copyWith(tags: null, color: null);
-                                                await DatabaseHelper().updateAccount(clearedAccount);
-                                                selectedTagNotifier.value = null;
-                                                loadAccounts();
-                                                setState(() {
-                                                  localItem = clearedAccount;
-                                                });
-                                              },
-                                              onLongPress: () async {
-                                                final confirmed = await showDialog<bool>(
-                                                  context: context,
-                                                  builder: (context) => AlertDialog(
-                                                    title: Text("Delete '${localItem.tags}'?"),
-                                                    content: Text("This will remove the tag from the database and from any account using it."),
-                                                    actions: [
-                                                      TextButton(onPressed: () => Navigator.pop(context, false), child: Text("Cancel")),
-                                                      TextButton(onPressed: () => Navigator.pop(context, true), child: Text("Delete")),
-                                                    ],
-                                                  ),
-                                                );
-                                                if (confirmed == true) {
-                                                  await DatabaseHelper().deleteTag(localItem.tags!, 'account');
-                                                  await DatabaseHelper().clearTagFromAccounts(localItem.tags!);
-                                                  selectedTagNotifier.value = null;
+                                            if (localItem.tags != null &&
+                                                localItem.tags!.isNotEmpty)
+                                              GestureDetector(
+                                                onTap: () async {
+                                                  final clearedAccount =
+                                                      localItem.copyWith(
+                                                        tags: null,
+                                                        color: null,
+                                                      );
+                                                  await DatabaseHelper()
+                                                      .updateAccount(
+                                                        clearedAccount,
+                                                      );
+                                                  selectedTagNotifier.value =
+                                                      null;
                                                   loadAccounts();
                                                   setState(() {
-                                                    localItem = localItem.copyWith(tags: null, color: null);
+                                                    localItem = clearedAccount;
                                                   });
-                                                }
-                                              },
-                                              child: Container(
-                                                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                                decoration: BoxDecoration(
-                                                  color: hexToColor(localItem.color ?? '#000000'),
-                                                  borderRadius: BorderRadius.circular(20),
-                                                  border: Border.all(color: hexToColor(localItem.color ?? '#000000')),
-                                                ),
-                                                child: Text(
-                                                  localItem.tags!,
-                                                  style: TextStyle(fontSize: 12, color: Colors.white),
+                                                },
+                                                onLongPress: () async {
+                                                  final confirmed = await showDialog<bool>(
+                                                    context: context,
+                                                    builder: (context) => AlertDialog(
+                                                      title: Text(
+                                                        "Delete '${localItem.tags}'?",
+                                                      ),
+                                                      content: Text(
+                                                        "This will remove the tag from the database and from any account using it.",
+                                                      ),
+                                                      actions: [
+                                                        TextButton(
+                                                          onPressed: () =>
+                                                              Navigator.pop(
+                                                                context,
+                                                                false,
+                                                              ),
+                                                          child: Text("Cancel"),
+                                                        ),
+                                                        TextButton(
+                                                          onPressed: () =>
+                                                              Navigator.pop(
+                                                                context,
+                                                                true,
+                                                              ),
+                                                          child: Text("Delete"),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                  if (confirmed == true) {
+                                                    await DatabaseHelper()
+                                                        .deleteTag(
+                                                          localItem.tags!,
+                                                          'account',
+                                                        );
+                                                    await DatabaseHelper()
+                                                        .clearTagFromAccounts(
+                                                          localItem.tags!,
+                                                        );
+                                                    selectedTagNotifier.value =
+                                                        null;
+                                                    loadAccounts();
+                                                    setState(() {
+                                                      localItem = localItem
+                                                          .copyWith(
+                                                            tags: null,
+                                                            color: null,
+                                                          );
+                                                    });
+                                                  }
+                                                },
+                                                child: Container(
+                                                  padding: EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                    vertical: 6,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: hexToColor(
+                                                      localItem.color ??
+                                                          '#000000',
+                                                    ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          20,
+                                                        ),
+                                                    border: Border.all(
+                                                      color: hexToColor(
+                                                        localItem.color ??
+                                                            '#000000',
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  child: Text(
+                                                    localItem.tags!,
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                            Divider(thickness: 1.5,),
+                                            Divider(thickness: 1.5),
                                             Padding(
-                                              padding: const EdgeInsetsGeometry.directional(start: 15, end: 15),
+                                              padding:
+                                                  const EdgeInsetsGeometry.directional(
+                                                    start: 15,
+                                                    end: 15,
+                                                  ),
                                               child: Row(
-                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
                                                 children: [
                                                   Padding(
-                                                    padding: const EdgeInsets.only(bottom: 15),
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                          bottom: 15,
+                                                        ),
                                                     child: Align(
-                                                      alignment: Alignment.center,
-                                                      child: Text("Available tags"),
+                                                      alignment:
+                                                          Alignment.center,
+                                                      child: Text(
+                                                        "Available tags",
+                                                      ),
                                                     ),
                                                   ),
                                                   Spacer(),
                                                   GestureDetector(
                                                     onTap: () {
-                                                      showDialog(context: context, builder: (BuildContext context) {
-                                                        return AlertDialog(
-                                                          title: Text("Create tag for ${item.name}"),
-                                                          content: Column(
-                                                            mainAxisSize: MainAxisSize.min,
-                                                            children: [
-                                                              TextField(
-                                                                decoration: InputDecoration(labelText: "Tag Name"),
-                                                                controller: _tagController,
-                                                                autofocus: true,
-                                                              ),
-                                                              const SizedBox(height: 15),
-                                                              ColorPicker(
-                                                                pickerColor: pickerColor,
-                                                                onColorChanged: updateColor,
-                                                                displayThumbColor: true,
+                                                      showDialog(
+                                                        context: context,
+                                                        builder: (BuildContext context) {
+                                                          return AlertDialog(
+                                                            title: Text(
+                                                              "Create tag for ${item.name}",
+                                                            ),
+                                                            content: Column(
+                                                              mainAxisSize:
+                                                                  MainAxisSize
+                                                                      .min,
+                                                              children: [
+                                                                TextField(
+                                                                  decoration:
+                                                                      InputDecoration(
+                                                                        labelText:
+                                                                            "Tag Name",
+                                                                      ),
+                                                                  controller:
+                                                                      _tagController,
+                                                                  autofocus:
+                                                                      true,
+                                                                ),
+                                                                const SizedBox(
+                                                                  height: 15,
+                                                                ),
+                                                                ColorPicker(
+                                                                  pickerColor:
+                                                                      pickerColor,
+                                                                  onColorChanged:
+                                                                      updateColor,
+                                                                  displayThumbColor:
+                                                                      true,
+                                                                ),
+                                                              ],
+                                                            ),
+                                                            actions: [
+                                                              TextButton(
+                                                                onPressed: () async {
+                                                                  final tagName =
+                                                                      _tagController
+                                                                          .text
+                                                                          .trim();
+                                                                  final hexColor =
+                                                                      colorToHex(
+                                                                        pickerColor,
+                                                                      );
+                                                                  if (tagName
+                                                                      .isEmpty)
+                                                                    return;
+                                                                  await DatabaseHelper()
+                                                                      .createTag(
+                                                                        tagName,
+                                                                        'account',
+                                                                        hexColor,
+                                                                      );
+                                                                  final updatedAccount =
+                                                                      item.copyWith(
+                                                                        tags:
+                                                                            tagName,
+                                                                        color:
+                                                                            hexColor,
+                                                                      );
+                                                                  await DatabaseHelper()
+                                                                      .updateAccount(
+                                                                        updatedAccount,
+                                                                      );
+                                                                  loadAccounts();
+                                                                  _tagController
+                                                                      .clear();
+                                                                  Navigator.of(
+                                                                    context,
+                                                                  ).pop();
+                                                                  Navigator.of(
+                                                                    context,
+                                                                  ).pop();
+                                                                },
+                                                                child: Text(
+                                                                  "Save",
+                                                                ),
                                                               ),
                                                             ],
-                                                          ),
-                                                          actions: [
-                                                            TextButton(
-                                                              onPressed: () async {
-                                                                final tagName = _tagController.text.trim();
-                                                                final hexColor = colorToHex(pickerColor);
-                                                                if (tagName.isEmpty) return;
-                                                                await DatabaseHelper().createTag(tagName, 'account', hexColor);
-                                                                final updatedAccount = item.copyWith(
-                                                                  tags: tagName,
-                                                                  color: hexColor,
-                                                                );
-                                                                await DatabaseHelper().updateAccount(updatedAccount);
-                                                                loadAccounts();
-                                                                _tagController.clear();
-                                                                Navigator.of(context).pop();
-                                                                Navigator.of(context).pop();
-                                                              },
-                                                              child: Text("Save"),
-                                                            )
-                                                          ],
-                                                        );
-                                                      });
+                                                          );
+                                                        },
+                                                      );
                                                     },
                                                     child: Container(
-                                                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                                      padding:
+                                                          EdgeInsets.symmetric(
+                                                            horizontal: 12,
+                                                            vertical: 6,
+                                                          ),
                                                       decoration: BoxDecoration(
-                                                        color: Theme.of(context).colorScheme.primary,
-                                                        borderRadius: BorderRadius.circular(20),
+                                                        color: Theme.of(
+                                                          context,
+                                                        ).colorScheme.primary,
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              20,
+                                                            ),
                                                       ),
                                                       child: Text(
                                                         'Create New Tag',
-                                                        style: TextStyle(fontSize: 12, color: Colors.black),
+                                                        style: TextStyle(
+                                                          fontSize: 12,
+                                                          color: Colors.black,
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
@@ -449,73 +635,137 @@ class AccountPageState extends State<AccountPage> {
                                               spacing: 8,
                                               runSpacing: 4,
                                               children: [
-                                                ...filteredTags.map((tag) => GestureDetector(
-                                                  onLongPress: () async {
-                                                    final confirm = await showDialog<bool>(context: context, builder: (context) => AlertDialog(
-                                                      title: Text("Delete '${tag.name}' tag?"),
-                                                      content: Text("This will remove the tag from the database and from any account that uses it."),
-                                                      actions: [
-                                                        TextButton(onPressed: () => Navigator.pop(context, false), child: Text("Cancel")),
-                                                        TextButton(onPressed: () => Navigator.pop(context, true), child: Text("Delete")),
-                                                      ],
-                                                    ));
-                                                    if (confirm == true) {
-                                                      await DatabaseHelper().deleteTag(tag.name, tag.type);
-                                                      await DatabaseHelper().clearTagFromAccounts(tag.name);
-                                                      loadAccounts();
-                                                      futureTags = DatabaseHelper().fetchTagsByType('account');
-                                                      localItem = localItem.copyWith(
-                                                        tags: null,
-                                                        color: null,
+                                                ...filteredTags.map(
+                                                  (tag) => GestureDetector(
+                                                    onLongPress: () async {
+                                                      final confirm = await showDialog<bool>(
+                                                        context: context,
+                                                        builder: (context) => AlertDialog(
+                                                          title: Text(
+                                                            "Delete '${tag.name}' tag?",
+                                                          ),
+                                                          content: Text(
+                                                            "This will remove the tag from the database and from any account that uses it.",
+                                                          ),
+                                                          actions: [
+                                                            TextButton(
+                                                              onPressed: () =>
+                                                                  Navigator.pop(
+                                                                    context,
+                                                                    false,
+                                                                  ),
+                                                              child: Text(
+                                                                "Cancel",
+                                                              ),
+                                                            ),
+                                                            TextButton(
+                                                              onPressed: () =>
+                                                                  Navigator.pop(
+                                                                    context,
+                                                                    true,
+                                                                  ),
+                                                              child: Text(
+                                                                "Delete",
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
                                                       );
+                                                      if (confirm == true) {
+                                                        await DatabaseHelper()
+                                                            .deleteTag(
+                                                              tag.name,
+                                                              tag.type,
+                                                            );
+                                                        await DatabaseHelper()
+                                                            .clearTagFromAccounts(
+                                                              tag.name,
+                                                            );
+                                                        loadAccounts();
+                                                        futureTags =
+                                                            DatabaseHelper()
+                                                                .fetchTagsByType(
+                                                                  'account',
+                                                                );
+                                                        localItem = localItem
+                                                            .copyWith(
+                                                              tags: null,
+                                                              color: null,
+                                                            );
+                                                        setState(() {});
+                                                      }
+                                                    },
+                                                    onTap: () async {
+                                                      final updatedAccount =
+                                                          item.copyWith(
+                                                            tags: tag.name,
+                                                            color: tag.color,
+                                                          );
+                                                      await DatabaseHelper()
+                                                          .updateAccount(
+                                                            updatedAccount,
+                                                          );
+                                                      loadAccounts();
+                                                      localItem =
+                                                          updatedAccount;
+                                                      futureTags =
+                                                          DatabaseHelper()
+                                                              .fetchTagsByType(
+                                                                'account',
+                                                              );
                                                       setState(() {});
-                                                    }
-                                                  },
-                                                  onTap: () async {
-                                                    final updatedAccount = item.copyWith(
-                                                      tags: tag.name,
-                                                      color: tag.color,
-                                                    );
-                                                    await DatabaseHelper().updateAccount(updatedAccount);
-                                                    loadAccounts();
-                                                    localItem = updatedAccount;
-                                                    futureTags = DatabaseHelper().fetchTagsByType('account');
-                                                    setState(() {});
-                                                  },
-                                                  child: Container(
-                                                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                                    decoration: BoxDecoration(
-                                                      color: hexToColor(tag.color),
-                                                      borderRadius: BorderRadius.circular(20),
-                                                      border: Border.all(color: hexToColor(tag.color)),
-                                                    ),
-                                                    child: Text(
-                                                      tag.name,
-                                                      style: TextStyle(fontSize: 12, color: Colors.white),
+                                                    },
+                                                    child: Container(
+                                                      padding:
+                                                          EdgeInsets.symmetric(
+                                                            horizontal: 12,
+                                                            vertical: 6,
+                                                          ),
+                                                      decoration: BoxDecoration(
+                                                        color: hexToColor(
+                                                          tag.color,
+                                                        ),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              20,
+                                                            ),
+                                                        border: Border.all(
+                                                          color: hexToColor(
+                                                            tag.color,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        tag.name,
+                                                        style: TextStyle(
+                                                          fontSize: 12,
+                                                          color: Colors.white,
+                                                        ),
+                                                      ),
                                                     ),
                                                   ),
-                                                )),
+                                                ),
                                               ],
                                             ),
                                           ],
                                         );
-                                      }
+                                      },
                                     );
-                                  }
+                                  },
                                 ),
                               ],
-                            )
-                          );       
+                            ),
+                          );
                         },
                       );
                     },
                   ),
                 );
-              }
+              },
             );
-          }
+          },
         ),
-      )
+      ),
     );
   }
 }

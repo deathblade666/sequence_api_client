@@ -49,7 +49,7 @@ class Rule {
     String? token,
     int? orderIndex,
     String? tags,
-    String? color
+    String? color,
   }) {
     return Rule(
       id: id ?? this.id,
@@ -59,7 +59,7 @@ class Rule {
       token: token ?? this.token,
       orderIndex: orderIndex ?? this.orderIndex,
       tags: tags,
-      color: color
+      color: color,
     );
   }
 }

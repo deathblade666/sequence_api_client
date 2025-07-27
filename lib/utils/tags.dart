@@ -4,12 +4,7 @@ class Tag {
   final String color;
   final String type;
 
-  Tag({
-    this.id,
-    required this.name,
-    required this.color,
-    required this.type,
-  });
+  Tag({this.id, required this.name, required this.color, required this.type});
 
   Map<String, dynamic> toMap() => {
     'id': id,

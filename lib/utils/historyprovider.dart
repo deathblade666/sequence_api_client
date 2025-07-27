@@ -18,14 +18,13 @@ class HistoryProvider with ChangeNotifier {
       timestamp: DateTime.now().toIso8601String(),
     );
     await DatabaseHelper().insertHistory(newItem);
-    await loadHistory(); 
+    await loadHistory();
   }
 
   Future<void> clearHistory() async {
-  final db = await DatabaseHelper().database;
-  await db.delete('history');
-  _items = [];
-  notifyListeners();
-}
-
+    final db = await DatabaseHelper().database;
+    await db.delete('history');
+    _items = [];
+    notifyListeners();
+  }
 }

@@ -24,58 +24,60 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => HistoryProvider()..loadHistory()),
       ],
-      child:Seqeunce_API_Client()
-    )
+      child: Seqeunce_API_Client(),
+    ),
   );
 }
- 
-  final _defaultDarkColorScheme = ColorScheme.fromSwatch(
-    primarySwatch: Colors.indigo, brightness: Brightness.dark);
-  final _defaultLightColorScheme = ColorScheme.fromSwatch(
-    primarySwatch: Colors.indigo);
-  
-  Future<void> ensureTokensEncrypted() async {
-    final db = await DatabaseHelper().database;
-    final rules = await db.query('rules');
-    for (final rule in rules) {
-      final id = rule['id'];
-      final token = rule['token'] as String;
-      final isEncrypted = await SecretService.instance.isTokenEncrypted(token);
-      if (!isEncrypted) {
-        print("🔧 Encrypting token for rule ID $id");
-        final encrypted = await SecretService.instance.encryptToken(token);
-        await db.update(
-          'rules',
-          {'token': encrypted},
-          where: 'id = ?',
-          whereArgs: [id],
-        );
-      }
+
+final _defaultDarkColorScheme = ColorScheme.fromSwatch(
+  primarySwatch: Colors.indigo,
+  brightness: Brightness.dark,
+);
+final _defaultLightColorScheme = ColorScheme.fromSwatch(
+  primarySwatch: Colors.indigo,
+);
+
+Future<void> ensureTokensEncrypted() async {
+  final db = await DatabaseHelper().database;
+  final rules = await db.query('rules');
+  for (final rule in rules) {
+    final id = rule['id'];
+    final token = rule['token'] as String;
+    final isEncrypted = await SecretService.instance.isTokenEncrypted(token);
+    if (!isEncrypted) {
+      print("🔧 Encrypting token for rule ID $id");
+      final encrypted = await SecretService.instance.encryptToken(token);
+      await db.update(
+        'rules',
+        {'token': encrypted},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
     }
   }
-
-
+}
 
 class Seqeunce_API_Client extends StatelessWidget {
   Seqeunce_API_Client({super.key});
 
-
   @override
   Widget build(BuildContext context) {
-    return DynamicColorBuilder(builder: (lightColorScheme, darkColorScheme, ) {
-      return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: HomePage(),
-        theme: ThemeData(
-          colorScheme: lightColorScheme ?? _defaultLightColorScheme,
-          useMaterial3: true,
+    return DynamicColorBuilder(
+      builder: (lightColorScheme, darkColorScheme) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          home: HomePage(),
+          theme: ThemeData(
+            colorScheme: lightColorScheme ?? _defaultLightColorScheme,
+            useMaterial3: true,
           ),
           darkTheme: ThemeData(
             colorScheme: darkColorScheme ?? _defaultDarkColorScheme,
             useMaterial3: true,
           ),
-        themeMode: ThemeMode.system,
+          themeMode: ThemeMode.system,
         );
-    });
+      },
+    );
   }
 }

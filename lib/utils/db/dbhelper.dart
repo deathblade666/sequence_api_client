@@ -110,7 +110,7 @@ class DatabaseHelper {
           ALTER TABLE accounts ADD COLUMN tags TEXT DEFAULT NULL
           ''');
         }
-        if (oldVersion < 6){
+        if (oldVersion < 6) {
           await db.execute('''
           CREATE TABLE tags (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -145,9 +145,8 @@ class DatabaseHelper {
           await db.execute('DROP TABLE accounts');
           await db.execute('ALTER TABLE accounts_new RENAME TO accounts');
           clearAccountTagsAndColors();
-          
         }
-      }
+      },
     );
   }
 
@@ -182,11 +181,7 @@ class DatabaseHelper {
 
   Future<int> deleteAccount(int id) async {
     final db = await database;
-    return await db.delete(
-      'accounts',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('accounts', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<void> printAllAccounts() async {
@@ -209,38 +204,26 @@ class DatabaseHelper {
       final existingOrder = existing.first['order_index'] as int? ?? 0;
       await db.update(
         'accounts',
-        {
-          ...account.toMap(),
-          'order_index': existingOrder,
-        },
+        {...account.toMap(), 'order_index': existingOrder},
         where: 'LOWER(TRIM(name)) = ?',
         whereArgs: [normalizedName],
       );
     } else {
-      final maxOrderResult = await db.rawQuery('SELECT MAX(order_index) as max_order FROM accounts');
-      final maxOrder = maxOrderResult.first['max_order'] as int? ?? 0;
-      await db.insert(
-        'accounts',
-        {
-          ...account.toMap(),
-          'order_index': maxOrder + 1,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
+      final maxOrderResult = await db.rawQuery(
+        'SELECT MAX(order_index) as max_order FROM accounts',
       );
+      final maxOrder = maxOrderResult.first['max_order'] as int? ?? 0;
+      await db.insert('accounts', {
+        ...account.toMap(),
+        'order_index': maxOrder + 1,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
   }
 
-Future<void> clearAccountTagsAndColors() async {
-  final db = await database;
-  await db.update(
-    'accounts',
-    {
-      'tags': null,
-      'color': null,
-    },
-  );
-}
-
+  Future<void> clearAccountTagsAndColors() async {
+    final db = await database;
+    await db.update('accounts', {'tags': null, 'color': null});
+  }
 
   Future<List<SequenceAccount>> getHiddenAccounts() async {
     final db = await database;
@@ -264,7 +247,11 @@ Future<void> clearAccountTagsAndColors() async {
 
   Future<void> insertHistory(HistoryItem item) async {
     final db = await database;
-    await db.insert('history', item.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert(
+      'history',
+      item.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<List<HistoryItem>> getHistory() async {
@@ -274,20 +261,23 @@ Future<void> clearAccountTagsAndColors() async {
   }
 
   Future<List<Rule>> getRules() async {
-  final db = await database;
-  final result = await db.query('rules', orderBy: 'order_index ASC');
-  return result.map((r) => Rule(
-    id: r['id'] as int?,
-    name: r['name'] as String,
-    ruleId: r['ruleid'] as String,
-    timestamp: r['timestamp'] as String,
-    token: r['token'] as String,
-    orderIndex: r['order_index'] as int? ?? 0,
-    tags: r['tags'] as String?,
-    color: r['color'] as String?,
-  )).toList();
-}
-
+    final db = await database;
+    final result = await db.query('rules', orderBy: 'order_index ASC');
+    return result
+        .map(
+          (r) => Rule(
+            id: r['id'] as int?,
+            name: r['name'] as String,
+            ruleId: r['ruleid'] as String,
+            timestamp: r['timestamp'] as String,
+            token: r['token'] as String,
+            orderIndex: r['order_index'] as int? ?? 0,
+            tags: r['tags'] as String?,
+            color: r['color'] as String?,
+          ),
+        )
+        .toList();
+  }
 
   Future<int> updateRule(Rule rule) async {
     final db = await database;
@@ -300,7 +290,7 @@ Future<void> clearAccountTagsAndColors() async {
         'timestamp': rule.timestamp,
         'order_index': rule.orderIndex,
         'color': rule.color,
-        'tags': rule.tags
+        'tags': rule.tags,
       },
       where: 'id = ?',
       whereArgs: [rule.id],
@@ -319,20 +309,15 @@ Future<void> clearAccountTagsAndColors() async {
 
   Future<void> upsertSecret(String secretValue) async {
     final db = await database;
-    await db.insert(
-      'secrets',
-      {'id': 1, 'secret': secretValue},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('secrets', {
+      'id': 1,
+      'secret': secretValue,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<String?> getSecret() async {
     final db = await database;
-    final result = await db.query(
-      'secrets',
-      where: 'id = ?',
-      whereArgs: [1],
-    );
+    final result = await db.query('secrets', where: 'id = ?', whereArgs: [1]);
 
     if (result.isNotEmpty) {
       return result.first['secret'] as String?;
@@ -342,79 +327,78 @@ Future<void> clearAccountTagsAndColors() async {
 
   Future<void> deleteSecret() async {
     final db = await database;
-    await db.delete(
-      'secrets',
-      where: 'id = ?',
-      whereArgs: [1],
-    );
+    await db.delete('secrets', where: 'id = ?', whereArgs: [1]);
   }
 
   Future<List<Tag>> fetchTagsByType(String type) async {
-  final db = await database;
-  final results = await db.query('tags', where: 'type = ?', whereArgs: [type]);
-  return results.map((map) => Tag.fromMap(map)).toList();
-}
-
-Future<void> createTag(String name, String type, String hexColor) async {
-  final db = await database;
-  final exists = Sqflite.firstIntValue(await db.rawQuery(
-    'SELECT COUNT(*) FROM tags WHERE name = ? AND type = ?',
-    [name, type],
-  ));
-  if (exists == 0) {
-    await db.insert('tags', {
-      'name': name,
-      'type': type,
-      'color': hexColor,
-    });
+    final db = await database;
+    final results = await db.query(
+      'tags',
+      where: 'type = ?',
+      whereArgs: [type],
+    );
+    return results.map((map) => Tag.fromMap(map)).toList();
   }
-}
 
+  Future<void> createTag(String name, String type, String hexColor) async {
+    final db = await database;
+    final exists = Sqflite.firstIntValue(
+      await db.rawQuery(
+        'SELECT COUNT(*) FROM tags WHERE name = ? AND type = ?',
+        [name, type],
+      ),
+    );
+    if (exists == 0) {
+      await db.insert('tags', {'name': name, 'type': type, 'color': hexColor});
+    }
+  }
 
-Future<void> deleteTag(String name, String type) async {
-  final db = await database;
-  await db.delete('tags', where: 'name = ? AND type = ?', whereArgs: [name, type]);
-}
+  Future<void> deleteTag(String name, String type) async {
+    final db = await database;
+    await db.delete(
+      'tags',
+      where: 'name = ? AND type = ?',
+      whereArgs: [name, type],
+    );
+  }
 
-Future<void> clearTagFromAccounts(String tagName) async {
-  final db = await database;
+  Future<void> clearTagFromAccounts(String tagName) async {
+    final db = await database;
 
-  final result = await db.query(
-    'accounts',
-    where: 'tags = ?',
-    whereArgs: [tagName],
-  );
-
-  for (final row in result) {
-    final accountId = row['id'] as int;
-    await db.update(
+    final result = await db.query(
       'accounts',
-      {'tags': null, 'color': null},
-      where: 'id = ?',
-      whereArgs: [accountId],
+      where: 'tags = ?',
+      whereArgs: [tagName],
     );
+
+    for (final row in result) {
+      final accountId = row['id'] as int;
+      await db.update(
+        'accounts',
+        {'tags': null, 'color': null},
+        where: 'id = ?',
+        whereArgs: [accountId],
+      );
+    }
   }
-}
-Future<void> clearTagFromRule(String tagName) async {
-  final db = await database;
 
-  final result = await db.query(
-    'rules',
-    where: 'tags = ?',
-    whereArgs: [tagName],
-  );
+  Future<void> clearTagFromRule(String tagName) async {
+    final db = await database;
 
-  for (final row in result) {
-    final ruleId = row['id'] as int;
-    await db.update(
+    final result = await db.query(
       'rules',
-      {'tags': null, 'color': null},
-      where: 'id = ?',
-      whereArgs: [ruleId],
+      where: 'tags = ?',
+      whereArgs: [tagName],
     );
+
+    for (final row in result) {
+      final ruleId = row['id'] as int;
+      await db.update(
+        'rules',
+        {'tags': null, 'color': null},
+        where: 'id = ?',
+        whereArgs: [ruleId],
+      );
+    }
   }
-}
-
-
-
 }

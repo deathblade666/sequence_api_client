@@ -3,10 +3,11 @@ import 'dart:io';
 
 import 'package:Seqeunce_API_Client/utils/db/dbhelper.dart';
 
-class SequenceApi{
-
+class SequenceApi {
   static runTrigger(String ruleId, String apitoken) async {
-    var uri = Uri.parse('https://api.getsequence.io/remote-api/rules/$ruleId/trigger');
+    var uri = Uri.parse(
+      'https://api.getsequence.io/remote-api/rules/$ruleId/trigger',
+    );
     var client = HttpClient();
     var request = await client.postUrl(uri);
     request.headers.contentType = ContentType('application', 'json');
@@ -17,7 +18,6 @@ class SequenceApi{
     var jsonData = jsonDecode(responseBody);
     var statusCode = response.statusCode;
     return statusCode;
-
   }
 
   static Future<List<SequenceAccount>> getAccounts(String apitoken) async {
@@ -32,9 +32,9 @@ class SequenceApi{
     var responseBody = await response.transform(utf8.decoder).join();
     var jsonData = jsonDecode(responseBody);
     if (jsonData != null &&
-    jsonData is Map &&
-    jsonData['data'] != null &&
-    jsonData['data']['balances'] != null) {
+        jsonData is Map &&
+        jsonData['data'] != null &&
+        jsonData['data']['balances'] != null) {
       List<dynamic> balancesJson = jsonData['data']['balances'];
       List<SequenceAccount> accountList = [];
 
@@ -107,7 +107,7 @@ class SequenceAccount {
     this.orderIndex,
     this.lastsync,
     this.color,
-    this.tags
+    this.tags,
   });
 
   factory SequenceAccount.fromJson(Map<String, dynamic> json) {
@@ -132,7 +132,7 @@ class SequenceAccount {
       'order_index': orderIndex ?? 0,
       'lastsync': lastsync,
       'color': color,
-      'tags': tags
+      'tags': tags,
     };
   }
 
@@ -146,7 +146,7 @@ class SequenceAccount {
       orderIndex: map['order_index'],
       lastsync: map['lastsync'],
       color: map['color'],
-      tags: map['tags']
+      tags: map['tags'],
     );
   }
 }
@@ -161,7 +161,7 @@ extension SequenceAccountCopy on SequenceAccount {
     int? orderIndex,
     String? lastsync,
     String? color,
-    String? tags
+    String? tags,
   }) {
     return SequenceAccount(
       name: name ?? this.name,
@@ -172,11 +172,10 @@ extension SequenceAccountCopy on SequenceAccount {
       orderIndex: orderIndex ?? this.orderIndex,
       lastsync: lastsync ?? this.lastsync,
       color: color,
-      tags: tags
+      tags: tags,
     );
   }
 }
-
 
 class ApiDataException implements Exception {
   final String message;
