@@ -13,10 +13,7 @@ class HistoryProvider with ChangeNotifier {
   }
 
   Future<void> addHistory(String name) async {
-    final newItem = HistoryItem(
-      name: name,
-      timestamp: DateTime.now().toIso8601String(),
-    );
+    final newItem = HistoryItem(name: name, timestamp: DateTime.now().toIso8601String());
     await DatabaseHelper().insertHistory(newItem);
     await loadHistory();
   }

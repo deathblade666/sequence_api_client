@@ -106,9 +106,7 @@ class _TransferRulesState extends State<TransferRules> {
               return StatefulBuilder(
                 builder: (BuildContext context, StateSetter setState) {
                   return Padding(
-                    padding: EdgeInsets.only(
-                      bottom: MediaQuery.of(context).viewInsets.bottom,
-                    ),
+                    padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
                     child: SizedBox(
                       height: 300,
                       child: Column(
@@ -118,26 +116,18 @@ class _TransferRulesState extends State<TransferRules> {
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               Padding(
-                                padding: const EdgeInsetsGeometry.directional(
-                                  top: 8,
-                                  end: 8,
-                                ),
+                                padding: const EdgeInsetsGeometry.directional(top: 8, end: 8),
                                 child: IconButton(
                                   onPressed: () async {
                                     ruleId = _ruleController.text;
                                     name = _nameController.text;
                                     final rawToken = _tokencontroller.text;
-                                    final encryptedToken = await SecretService
-                                        .instance
-                                        .encryptToken(rawToken);
+                                    final encryptedToken = await SecretService.instance.encryptToken(rawToken);
                                     final db = await DatabaseHelper().database;
                                     final maxOrderResult = await db.rawQuery(
                                       'SELECT MAX(order_index) as max_order FROM rules',
                                     );
-                                    final maxOrder =
-                                        maxOrderResult.first['max_order']
-                                            as int? ??
-                                        -1;
+                                    final maxOrder = maxOrderResult.first['max_order'] as int? ?? -1;
                                     await db.insert('rules', {
                                       'name': name,
                                       'ruleid': ruleId,
@@ -155,34 +145,21 @@ class _TransferRulesState extends State<TransferRules> {
                           ),
                           Center(child: const Text("Create a Rule Trigger")),
                           Padding(
-                            padding: EdgeInsetsGeometry.directional(
-                              start: 15,
-                              end: 15,
-                            ),
+                            padding: EdgeInsetsGeometry.directional(start: 15, end: 15),
                             child: TextField(
                               controller: _nameController,
-                              decoration: InputDecoration(
-                                label: const Text("Name"),
-                              ),
+                              decoration: InputDecoration(label: const Text("Name")),
                             ),
                           ),
                           Padding(
-                            padding: EdgeInsetsGeometry.directional(
-                              start: 15,
-                              end: 15,
-                            ),
+                            padding: EdgeInsetsGeometry.directional(start: 15, end: 15),
                             child: TextField(
                               controller: _ruleController,
-                              decoration: InputDecoration(
-                                label: const Text("Rule ID"),
-                              ),
+                              decoration: InputDecoration(label: const Text("Rule ID")),
                             ),
                           ),
                           Padding(
-                            padding: EdgeInsetsGeometry.directional(
-                              start: 15,
-                              end: 15,
-                            ),
+                            padding: EdgeInsetsGeometry.directional(start: 15, end: 15),
                             child: TextField(
                               controller: _tokencontroller,
                               decoration: InputDecoration(
@@ -232,14 +209,9 @@ class _TransferRulesState extends State<TransferRules> {
             key: Key(rule.id.toString()),
             margin: EdgeInsets.symmetric(horizontal: 3, vertical: 3),
             elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             child: ListTile(
-              leading: ReorderableDragStartListener(
-                index: index,
-                child: Icon(Icons.drag_handle),
-              ),
+              leading: ReorderableDragStartListener(index: index, child: Icon(Icons.drag_handle)),
               title: Text(rule.name),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -253,24 +225,13 @@ class _TransferRulesState extends State<TransferRules> {
                         .where((tag) => tag.isNotEmpty)
                         .map<Widget>(
                           (tag) => Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
+                            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               color: hexToColor(rule.color ?? '#000000'),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: hexToColor(rule.color ?? '#000000'),
-                              ),
+                              border: Border.all(color: hexToColor(rule.color ?? '#000000')),
                             ),
-                            child: Text(
-                              tag,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.white,
-                              ),
-                            ),
+                            child: Text(tag, style: TextStyle(fontSize: 12, color: Colors.white)),
                           ),
                         )
                         .toList(),
@@ -285,8 +246,7 @@ class _TransferRulesState extends State<TransferRules> {
               ),
               onLongPress: () async {
                 final encryptedToken = rule.token;
-                final decryptedToken = await SecretService.instance
-                    .decryptToken(encryptedToken);
+                final decryptedToken = await SecretService.instance.decryptToken(encryptedToken);
                 _nameController.text = rule.name;
                 _ruleController.text = rule.ruleId;
                 _tokencontroller.text = decryptedToken!;
@@ -298,9 +258,7 @@ class _TransferRulesState extends State<TransferRules> {
                     return StatefulBuilder(
                       builder: (BuildContext context, StateSetter setState) {
                         return Padding(
-                          padding: EdgeInsets.only(
-                            bottom: MediaQuery.of(context).viewInsets.bottom,
-                          ),
+                          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
                           child: SizedBox(
                             height: 500,
                             child: SingleChildScrollView(
@@ -312,13 +270,8 @@ class _TransferRulesState extends State<TransferRules> {
                                     children: [
                                       IconButton(
                                         onPressed: () async {
-                                          final db =
-                                              await DatabaseHelper().database;
-                                          await db.delete(
-                                            'rules',
-                                            where: 'id = ?',
-                                            whereArgs: [rule.id],
-                                          );
+                                          final db = await DatabaseHelper().database;
+                                          await db.delete('rules', where: 'id = ?', whereArgs: [rule.id]);
                                           _loadRules();
                                           close();
                                         },
@@ -327,17 +280,11 @@ class _TransferRulesState extends State<TransferRules> {
                                       Spacer(),
                                       IconButton(
                                         onPressed: () async {
-                                          final updatedName =
-                                              _nameController.text;
-                                          final updatedRuleId =
-                                              _ruleController.text;
-                                          final rawToken =
-                                              _tokencontroller.text;
-                                          final encryptedToken =
-                                              await SecretService.instance
-                                                  .encryptToken(rawToken);
-                                          final db =
-                                              await DatabaseHelper().database;
+                                          final updatedName = _nameController.text;
+                                          final updatedRuleId = _ruleController.text;
+                                          final rawToken = _tokencontroller.text;
+                                          final encryptedToken = await SecretService.instance.encryptToken(rawToken);
+                                          final db = await DatabaseHelper().database;
                                           await db.update(
                                             'rules',
                                             {
@@ -358,35 +305,21 @@ class _TransferRulesState extends State<TransferRules> {
                                   ),
                                   Text("Edit ${rule.name}"),
                                   Padding(
-                                    padding: EdgeInsetsGeometry.directional(
-                                      start: 15,
-                                      end: 15,
-                                    ),
+                                    padding: EdgeInsetsGeometry.directional(start: 15, end: 15),
                                     child: TextField(
                                       controller: _nameController,
-                                      decoration: InputDecoration(
-                                        label: const Text("Name"),
-                                      ),
+                                      decoration: InputDecoration(label: const Text("Name")),
                                     ),
                                   ),
                                   Padding(
-                                    padding: EdgeInsetsGeometry.directional(
-                                      start: 15,
-                                      end: 15,
-                                    ),
+                                    padding: EdgeInsetsGeometry.directional(start: 15, end: 15),
                                     child: TextField(
                                       controller: _ruleController,
-                                      decoration: InputDecoration(
-                                        label: const Text("Rule ID"),
-                                      ),
+                                      decoration: InputDecoration(label: const Text("Rule ID")),
                                     ),
                                   ),
                                   Padding(
-                                    padding: EdgeInsetsGeometry.directional(
-                                      start: 15,
-                                      end: 15,
-                                      bottom: 15,
-                                    ),
+                                    padding: EdgeInsetsGeometry.directional(start: 15, end: 15, bottom: 15),
                                     child: TextField(
                                       controller: _tokencontroller,
                                       obscureText: obscureEdit,
@@ -409,54 +342,31 @@ class _TransferRulesState extends State<TransferRules> {
                                   ),
                                   StatefulBuilder(
                                     builder: (context, setState) {
-                                      Future<List<Tag>> futureTags =
-                                          DatabaseHelper().fetchTagsByType(
-                                            'rule',
-                                          );
+                                      Future<List<Tag>> futureTags = DatabaseHelper().fetchTagsByType('rule');
                                       return FutureBuilder<List<Tag>>(
                                         future: futureTags,
                                         builder: (context, snapshot) {
-                                          if (!snapshot.hasData)
-                                            return CircularProgressIndicator();
+                                          if (!snapshot.hasData) return CircularProgressIndicator();
                                           final tagsList = snapshot.data!;
                                           final currentTags =
-                                              localItem.tags
-                                                  ?.split(',')
-                                                  .map((t) => t.trim())
-                                                  .toList() ??
-                                              [];
+                                              localItem.tags?.split(',').map((t) => t.trim()).toList() ?? [];
                                           final filteredTags = tagsList
-                                              .where(
-                                                (tag) => !currentTags.contains(
-                                                  tag.name,
-                                                ),
-                                              )
+                                              .where((tag) => !currentTags.contains(tag.name))
                                               .toList();
                                           return Column(
                                             children: [
                                               Padding(
-                                                padding: const EdgeInsets.only(
-                                                  left: 15,
-                                                ),
+                                                padding: const EdgeInsets.only(left: 15),
                                                 child: Align(
-                                                  alignment:
-                                                      Alignment.centerLeft,
+                                                  alignment: Alignment.centerLeft,
                                                   child: Text("Current Tag"),
                                                 ),
                                               ),
-                                              if (localItem.tags != null &&
-                                                  localItem.tags!.isNotEmpty)
+                                              if (localItem.tags != null && localItem.tags!.isNotEmpty)
                                                 GestureDetector(
                                                   onTap: () async {
-                                                    final clearedRule =
-                                                        localItem.copyWith(
-                                                          tags: null,
-                                                          color: null,
-                                                        );
-                                                    await DatabaseHelper()
-                                                        .updateRule(
-                                                          clearedRule,
-                                                        );
+                                                    final clearedRule = localItem.copyWith(tags: null, color: null);
+                                                    await DatabaseHelper().updateRule(clearedRule);
                                                     _loadRules();
                                                     setState(() {
                                                       localItem = clearedRule;
@@ -466,109 +376,57 @@ class _TransferRulesState extends State<TransferRules> {
                                                     final confirmed = await showDialog<bool>(
                                                       context: context,
                                                       builder: (context) => AlertDialog(
-                                                        title: Text(
-                                                          "Delete '${localItem.tags}'?",
-                                                        ),
+                                                        title: Text("Delete '${localItem.tags}'?"),
                                                         content: Text(
                                                           "This will remove the tag from the database and from any account using it.",
                                                         ),
                                                         actions: [
                                                           TextButton(
-                                                            onPressed: () =>
-                                                                Navigator.pop(
-                                                                  context,
-                                                                  false,
-                                                                ),
-                                                            child: Text(
-                                                              "Cancel",
-                                                            ),
+                                                            onPressed: () => Navigator.pop(context, false),
+                                                            child: Text("Cancel"),
                                                           ),
                                                           TextButton(
-                                                            onPressed: () =>
-                                                                Navigator.pop(
-                                                                  context,
-                                                                  true,
-                                                                ),
-                                                            child: Text(
-                                                              "Delete",
-                                                            ),
+                                                            onPressed: () => Navigator.pop(context, true),
+                                                            child: Text("Delete"),
                                                           ),
                                                         ],
                                                       ),
                                                     );
                                                     if (confirmed == true) {
-                                                      await DatabaseHelper()
-                                                          .deleteTag(
-                                                            localItem.tags!,
-                                                            'rule',
-                                                          );
-                                                      await DatabaseHelper()
-                                                          .clearTagFromRule(
-                                                            localItem.tags!,
-                                                          );
+                                                      await DatabaseHelper().deleteTag(localItem.tags!, 'rule');
+                                                      await DatabaseHelper().clearTagFromRule(localItem.tags!);
                                                       _loadRules();
                                                       setState(() {
-                                                        localItem = localItem
-                                                            .copyWith(
-                                                              tags: null,
-                                                              color: null,
-                                                            );
+                                                        localItem = localItem.copyWith(tags: null, color: null);
                                                       });
                                                     }
                                                   },
                                                   child: Container(
-                                                    padding:
-                                                        EdgeInsets.symmetric(
-                                                          horizontal: 12,
-                                                          vertical: 6,
-                                                        ),
+                                                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                                     decoration: BoxDecoration(
-                                                      color: hexToColor(
-                                                        localItem.color ??
-                                                            '#000000',
-                                                      ),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            20,
-                                                          ),
+                                                      color: hexToColor(localItem.color ?? '#000000'),
+                                                      borderRadius: BorderRadius.circular(20),
                                                       border: Border.all(
-                                                        color: hexToColor(
-                                                          localItem.color ??
-                                                              '#000000',
-                                                        ),
+                                                        color: hexToColor(localItem.color ?? '#000000'),
                                                       ),
                                                     ),
                                                     child: Text(
                                                       localItem.tags!,
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        color: Colors.white,
-                                                      ),
+                                                      style: TextStyle(fontSize: 12, color: Colors.white),
                                                     ),
                                                   ),
                                                 ),
                                               Divider(thickness: 1.5),
                                               Padding(
-                                                padding:
-                                                    const EdgeInsetsGeometry.directional(
-                                                      start: 15,
-                                                      end: 15,
-                                                    ),
+                                                padding: const EdgeInsetsGeometry.directional(start: 15, end: 15),
                                                 child: Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
+                                                  mainAxisAlignment: MainAxisAlignment.center,
                                                   children: [
                                                     Padding(
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                            bottom: 15,
-                                                          ),
+                                                      padding: const EdgeInsets.only(bottom: 15),
                                                       child: Align(
-                                                        alignment:
-                                                            Alignment.center,
-                                                        child: Text(
-                                                          "Available tags",
-                                                        ),
+                                                        alignment: Alignment.center,
+                                                        child: Text("Available tags"),
                                                       ),
                                                     ),
                                                     Spacer(),
@@ -578,83 +436,46 @@ class _TransferRulesState extends State<TransferRules> {
                                                           context: context,
                                                           builder: (BuildContext context) {
                                                             return AlertDialog(
-                                                              title: Center(
-                                                                child: Text(
-                                                                  "Create tag for ${rule.name}",
-                                                                ),
-                                                              ),
+                                                              title: Center(child: Text("Create tag for ${rule.name}")),
                                                               content: Column(
-                                                                mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .min,
+                                                                mainAxisSize: MainAxisSize.min,
                                                                 children: [
                                                                   TextField(
-                                                                    decoration: InputDecoration(
-                                                                      labelText:
-                                                                          "Tag Name",
-                                                                    ),
-                                                                    controller:
-                                                                        _tagController,
-                                                                    autofocus:
-                                                                        true,
+                                                                    decoration: InputDecoration(labelText: "Tag Name"),
+                                                                    controller: _tagController,
+                                                                    autofocus: true,
                                                                   ),
-                                                                  const SizedBox(
-                                                                    height: 15,
-                                                                  ),
+                                                                  const SizedBox(height: 15),
                                                                   ColorPicker(
-                                                                    pickerColor:
-                                                                        pickerColor,
-                                                                    onColorChanged:
-                                                                        updateColor,
-                                                                    displayThumbColor:
-                                                                        true,
-                                                                    showLabel:
-                                                                        false,
+                                                                    pickerColor: pickerColor,
+                                                                    onColorChanged: updateColor,
+                                                                    displayThumbColor: true,
+                                                                    showLabel: false,
                                                                   ),
                                                                 ],
                                                               ),
                                                               actions: [
                                                                 TextButton(
                                                                   onPressed: () async {
-                                                                    final tagName =
-                                                                        _tagController
-                                                                            .text
-                                                                            .trim();
-                                                                    final hexColor =
-                                                                        colorToHex(
-                                                                          pickerColor,
-                                                                        );
-                                                                    if (tagName
-                                                                        .isEmpty)
-                                                                      return;
-                                                                    await DatabaseHelper()
-                                                                        .createTag(
-                                                                          tagName,
-                                                                          'rule',
-                                                                          hexColor,
-                                                                        );
-                                                                    final updatedRule =
-                                                                        rule.copyWith(
-                                                                          tags:
-                                                                              tagName,
-                                                                          color:
-                                                                              hexColor,
-                                                                        );
-                                                                    await DatabaseHelper()
-                                                                        .updateRule(
-                                                                          updatedRule,
-                                                                        );
+                                                                    final tagName = _tagController.text.trim();
+                                                                    final hexColor = colorToHex(pickerColor);
+                                                                    if (tagName.isEmpty) return;
+                                                                    await DatabaseHelper().createTag(
+                                                                      tagName,
+                                                                      'rule',
+                                                                      hexColor,
+                                                                    );
+                                                                    final updatedRule = rule.copyWith(
+                                                                      tags: tagName,
+                                                                      color: hexColor,
+                                                                    );
+                                                                    await DatabaseHelper().updateRule(updatedRule);
                                                                     _loadRules();
-                                                                    _tagController
-                                                                        .clear();
-                                                                    Navigator.of(
-                                                                      context,
-                                                                    ).pop();
+                                                                    _tagController.clear();
+                                                                    Navigator.of(context).pop();
                                                                     close();
                                                                   },
-                                                                  child: Text(
-                                                                    "Save",
-                                                                  ),
+                                                                  child: Text("Save"),
                                                                 ),
                                                               ],
                                                             );
@@ -662,26 +483,14 @@ class _TransferRulesState extends State<TransferRules> {
                                                         );
                                                       },
                                                       child: Container(
-                                                        padding:
-                                                            EdgeInsets.symmetric(
-                                                              horizontal: 12,
-                                                              vertical: 6,
-                                                            ),
+                                                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                                         decoration: BoxDecoration(
-                                                          color: Theme.of(
-                                                            context,
-                                                          ).colorScheme.primary,
-                                                          borderRadius:
-                                                              BorderRadius.circular(
-                                                                20,
-                                                              ),
+                                                          color: Theme.of(context).colorScheme.primary,
+                                                          borderRadius: BorderRadius.circular(20),
                                                         ),
                                                         child: Text(
                                                           'Create New Tag',
-                                                          style: TextStyle(
-                                                            fontSize: 12,
-                                                            color: Colors.black,
-                                                          ),
+                                                          style: TextStyle(fontSize: 12, color: Colors.black),
                                                         ),
                                                       ),
                                                     ),
@@ -689,9 +498,7 @@ class _TransferRulesState extends State<TransferRules> {
                                                 ),
                                               ),
                                               Padding(
-                                                padding: EdgeInsets.only(
-                                                  top: 5,
-                                                ),
+                                                padding: EdgeInsets.only(top: 5),
                                                 child: Wrap(
                                                   spacing: 8,
                                                   runSpacing: 4,
@@ -702,111 +509,52 @@ class _TransferRulesState extends State<TransferRules> {
                                                           final confirm = await showDialog<bool>(
                                                             context: context,
                                                             builder: (context) => AlertDialog(
-                                                              title: Text(
-                                                                "Delete '${tag.name}' tag?",
-                                                              ),
+                                                              title: Text("Delete '${tag.name}' tag?"),
                                                               content: Text(
                                                                 "This will remove the tag from the database and from any Rule that uses it.",
                                                               ),
                                                               actions: [
                                                                 TextButton(
-                                                                  onPressed: () =>
-                                                                      Navigator.pop(
-                                                                        context,
-                                                                        false,
-                                                                      ),
-                                                                  child: Text(
-                                                                    "Cancel",
-                                                                  ),
+                                                                  onPressed: () => Navigator.pop(context, false),
+                                                                  child: Text("Cancel"),
                                                                 ),
                                                                 TextButton(
-                                                                  onPressed: () =>
-                                                                      Navigator.pop(
-                                                                        context,
-                                                                        true,
-                                                                      ),
-                                                                  child: Text(
-                                                                    "Delete",
-                                                                  ),
+                                                                  onPressed: () => Navigator.pop(context, true),
+                                                                  child: Text("Delete"),
                                                                 ),
                                                               ],
                                                             ),
                                                           );
                                                           if (confirm == true) {
-                                                            await DatabaseHelper()
-                                                                .deleteTag(
-                                                                  tag.name,
-                                                                  tag.type,
-                                                                );
-                                                            await DatabaseHelper()
-                                                                .clearTagFromRule(
-                                                                  tag.name,
-                                                                );
+                                                            await DatabaseHelper().deleteTag(tag.name, tag.type);
+                                                            await DatabaseHelper().clearTagFromRule(tag.name);
                                                             _loadRules();
-                                                            futureTags =
-                                                                DatabaseHelper()
-                                                                    .fetchTagsByType(
-                                                                      'rule',
-                                                                    );
-                                                            localItem =
-                                                                localItem
-                                                                    .copyWith(
-                                                                      tags:
-                                                                          null,
-                                                                      color:
-                                                                          null,
-                                                                    );
+                                                            futureTags = DatabaseHelper().fetchTagsByType('rule');
+                                                            localItem = localItem.copyWith(tags: null, color: null);
                                                             setState(() {});
                                                           }
                                                         },
                                                         onTap: () async {
-                                                          final updatedRule =
-                                                              rule.copyWith(
-                                                                tags: tag.name,
-                                                                color:
-                                                                    tag.color,
-                                                              );
-                                                          await DatabaseHelper()
-                                                              .updateRule(
-                                                                updatedRule,
-                                                              );
+                                                          final updatedRule = rule.copyWith(
+                                                            tags: tag.name,
+                                                            color: tag.color,
+                                                          );
+                                                          await DatabaseHelper().updateRule(updatedRule);
                                                           _loadRules();
-                                                          localItem =
-                                                              updatedRule;
-                                                          futureTags =
-                                                              DatabaseHelper()
-                                                                  .fetchTagsByType(
-                                                                    'rule',
-                                                                  );
+                                                          localItem = updatedRule;
+                                                          futureTags = DatabaseHelper().fetchTagsByType('rule');
                                                           setState(() {});
                                                         },
                                                         child: Container(
-                                                          padding:
-                                                              EdgeInsets.symmetric(
-                                                                horizontal: 12,
-                                                                vertical: 6,
-                                                              ),
+                                                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                                           decoration: BoxDecoration(
-                                                            color: hexToColor(
-                                                              tag.color,
-                                                            ),
-                                                            borderRadius:
-                                                                BorderRadius.circular(
-                                                                  20,
-                                                                ),
-                                                            border: Border.all(
-                                                              color: hexToColor(
-                                                                tag.color,
-                                                              ),
-                                                            ),
+                                                            color: hexToColor(tag.color),
+                                                            borderRadius: BorderRadius.circular(20),
+                                                            border: Border.all(color: hexToColor(tag.color)),
                                                           ),
                                                           child: Text(
                                                             tag.name,
-                                                            style: TextStyle(
-                                                              fontSize: 12,
-                                                              color:
-                                                                  Colors.white,
-                                                            ),
+                                                            style: TextStyle(fontSize: 12, color: Colors.white),
                                                           ),
                                                         ),
                                                       ),
@@ -839,20 +587,13 @@ class _TransferRulesState extends State<TransferRules> {
                 });
               },
               onTap: () async {
-                final decryptedToken = await SecretService.instance
-                    .decryptToken(rule.token);
+                final decryptedToken = await SecretService.instance.decryptToken(rule.token);
                 if (decryptedToken == null) {
                   print("❌ Unable to decrypt token for rule ${rule.name}");
                   return;
                 }
-                var statusCode = await SequenceApi.runTrigger(
-                  rule.ruleId,
-                  decryptedToken,
-                );
-                Provider.of<HistoryProvider>(
-                  context,
-                  listen: false,
-                ).addHistory("${rule.name} - $statusCode");
+                var statusCode = await SequenceApi.runTrigger(rule.ruleId, decryptedToken);
+                Provider.of<HistoryProvider>(context, listen: false).addHistory("${rule.name} - $statusCode");
                 final db = await DatabaseHelper().database;
                 await db.update(
                   'rules',
@@ -863,9 +604,7 @@ class _TransferRulesState extends State<TransferRules> {
                 final updatedRules = await DatabaseHelper().getRules();
                 setState(() {
                   rules = updatedRules;
-                  lastRan = DateFormat(
-                    'yyyy-MM-dd hh:mma',
-                  ).format(DateTime.now());
+                  lastRan = DateFormat('yyyy-MM-dd hh:mma').format(DateTime.now());
                 });
               },
             ),

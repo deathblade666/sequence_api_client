@@ -18,8 +18,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final GlobalKey<AccountPageState> accountPageKey =
-      GlobalKey<AccountPageState>();
+  final GlobalKey<AccountPageState> accountPageKey = GlobalKey<AccountPageState>();
   String pageName = "Accounts";
   Icon filterIcon = Icon(Icons.filter_alt);
 
@@ -40,10 +39,7 @@ class _HomePageState extends State<HomePage> {
                   IconButton(
                     icon: Icon(Icons.delete),
                     onPressed: () {
-                      Provider.of<HistoryProvider>(
-                        context,
-                        listen: false,
-                      ).clearHistory();
+                      Provider.of<HistoryProvider>(context, listen: false).clearHistory();
                     },
                   ),
                 ],
@@ -61,11 +57,7 @@ class _HomePageState extends State<HomePage> {
                         final item = history[index];
                         return ListTile(
                           title: Text(item.name),
-                          subtitle: Text(
-                            DateFormat(
-                              'yyyy-MM-dd hh:mm a',
-                            ).format(DateTime.parse(item.timestamp)),
-                          ),
+                          subtitle: Text(DateFormat('yyyy-MM-dd hh:mm a').format(DateTime.parse(item.timestamp))),
                         );
                       },
                     );
@@ -101,10 +93,7 @@ class _HomePageState extends State<HomePage> {
                   position: RelativeRect.fromLTRB(100, 100, 0, 0),
                   items: [
                     PopupMenuItem<String?>(value: null, child: Text('None')),
-                    ...accountTags.map(
-                      (tag) =>
-                          PopupMenuItem<String?>(value: tag, child: Text(tag!)),
-                    ),
+                    ...accountTags.map((tag) => PopupMenuItem<String?>(value: tag, child: Text(tag!))),
                   ],
                 );
                 if (selectedTag != selectedTagNotifier.value) {
@@ -115,9 +104,7 @@ class _HomePageState extends State<HomePage> {
             ),
         ],
       ),
-      body: SafeArea(
-        child: Views(widget.homepageController, accountPageKey: accountPageKey),
-      ),
+      body: SafeArea(child: Views(widget.homepageController, accountPageKey: accountPageKey)),
       bottomNavigationBar: BottomAppBar(
         child: Row(
           children: [

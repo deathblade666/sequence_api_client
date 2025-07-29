@@ -6,6 +6,5 @@ class Secrets {
 
   Map<String, dynamic> toMap() => {'id': id, 'secret': secret};
 
-  factory Secrets.fromMap(Map<String, dynamic> map) =>
-      Secrets(id: map['id'], secret: map['secret']);
+  factory Secrets.fromMap(Map<String, dynamic> map) => Secrets(id: map['id'], secret: map['secret']);
 }

@@ -21,21 +21,14 @@ void main() async {
   await ensureTokensEncrypted();
   runApp(
     MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => HistoryProvider()..loadHistory()),
-      ],
+      providers: [ChangeNotifierProvider(create: (_) => HistoryProvider()..loadHistory())],
       child: Seqeunce_API_Client(),
     ),
   );
 }
 
-final _defaultDarkColorScheme = ColorScheme.fromSwatch(
-  primarySwatch: Colors.indigo,
-  brightness: Brightness.dark,
-);
-final _defaultLightColorScheme = ColorScheme.fromSwatch(
-  primarySwatch: Colors.indigo,
-);
+final _defaultDarkColorScheme = ColorScheme.fromSwatch(primarySwatch: Colors.indigo, brightness: Brightness.dark);
+final _defaultLightColorScheme = ColorScheme.fromSwatch(primarySwatch: Colors.indigo);
 
 Future<void> ensureTokensEncrypted() async {
   final db = await DatabaseHelper().database;
@@ -47,12 +40,7 @@ Future<void> ensureTokensEncrypted() async {
     if (!isEncrypted) {
       print("🔧 Encrypting token for rule ID $id");
       final encrypted = await SecretService.instance.encryptToken(token);
-      await db.update(
-        'rules',
-        {'token': encrypted},
-        where: 'id = ?',
-        whereArgs: [id],
-      );
+      await db.update('rules', {'token': encrypted}, where: 'id = ?', whereArgs: [id]);
     }
   }
 }
@@ -67,14 +55,8 @@ class Seqeunce_API_Client extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           home: HomePage(),
-          theme: ThemeData(
-            colorScheme: lightColorScheme ?? _defaultLightColorScheme,
-            useMaterial3: true,
-          ),
-          darkTheme: ThemeData(
-            colorScheme: darkColorScheme ?? _defaultDarkColorScheme,
-            useMaterial3: true,
-          ),
+          theme: ThemeData(colorScheme: lightColorScheme ?? _defaultLightColorScheme, useMaterial3: true),
+          darkTheme: ThemeData(colorScheme: darkColorScheme ?? _defaultDarkColorScheme, useMaterial3: true),
           themeMode: ThemeMode.system,
         );
       },

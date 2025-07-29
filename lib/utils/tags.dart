@@ -6,12 +6,7 @@ class Tag {
 
   Tag({this.id, required this.name, required this.color, required this.type});
 
-  Map<String, dynamic> toMap() => {
-    'id': id,
-    'name': name,
-    'color': color,
-    'type': type,
-  };
+  Map<String, dynamic> toMap() => {'id': id, 'name': name, 'color': color, 'type': type};
 
   factory Tag.fromMap(Map<String, dynamic> map) => Tag(
     id: map['id'] as int?,

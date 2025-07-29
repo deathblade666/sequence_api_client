@@ -5,9 +5,7 @@ import 'package:Seqeunce_API_Client/utils/db/dbhelper.dart';
 
 class SequenceApi {
   static runTrigger(String ruleId, String apitoken) async {
-    var uri = Uri.parse(
-      'https://api.getsequence.io/remote-api/rules/$ruleId/trigger',
-    );
+    var uri = Uri.parse('https://api.getsequence.io/remote-api/rules/$ruleId/trigger');
     var client = HttpClient();
     var request = await client.postUrl(uri);
     request.headers.contentType = ContentType('application', 'json');
@@ -31,10 +29,7 @@ class SequenceApi {
     var response = await request.close();
     var responseBody = await response.transform(utf8.decoder).join();
     var jsonData = jsonDecode(responseBody);
-    if (jsonData != null &&
-        jsonData is Map &&
-        jsonData['data'] != null &&
-        jsonData['data']['balances'] != null) {
+    if (jsonData != null && jsonData is Map && jsonData['data'] != null && jsonData['data']['balances'] != null) {
       List<dynamic> balancesJson = jsonData['data']['balances'];
       List<SequenceAccount> accountList = [];
 
@@ -42,12 +37,8 @@ class SequenceApi {
       final hiddenAccounts = await dbHelper.getHiddenAccounts();
       final allExistingAccounts = [...existingAccounts, ...hiddenAccounts];
 
-      final orderMap = {
-        for (var acc in existingAccounts) acc.name: acc.orderIndex ?? 0,
-      };
-      final hiddenMap = {
-        for (var acc in allExistingAccounts) acc.name: acc.hidden ?? false,
-      };
+      final orderMap = {for (var acc in existingAccounts) acc.name: acc.orderIndex ?? 0};
+      final hiddenMap = {for (var acc in allExistingAccounts) acc.name: acc.hidden ?? false};
 
       for (var data in balancesJson) {
         final name = data['name'];
@@ -67,12 +58,9 @@ class SequenceApi {
 
         final preservedOrder = orderMap[name] ?? orderMap.length;
         final preservedHidden = hiddenMap[name] ?? false;
-        final account = SequenceAccount.fromJson(data).copyWith(
-          orderIndex: preservedOrder,
-          hidden: preservedHidden,
-          color: existing.color,
-          tags: existing.tags,
-        );
+        final account = SequenceAccount.fromJson(
+          data,
+        ).copyWith(orderIndex: preservedOrder, hidden: preservedHidden, color: existing.color, tags: existing.tags);
         await dbHelper.upsertAccountByName(account);
         if (!preservedHidden) {
           accountList.add(account);
