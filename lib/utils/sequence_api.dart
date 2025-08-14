@@ -29,8 +29,9 @@ class SequenceApi {
     var response = await request.close();
     var responseBody = await response.transform(utf8.decoder).join();
     var jsonData = jsonDecode(responseBody);
-    if (jsonData != null && jsonData is Map && jsonData['data'] != null && jsonData['data']['balances'] != null) {
-      List<dynamic> balancesJson = jsonData['data']['balances'];
+
+    if (jsonData != null && jsonData is Map && jsonData['data'] != null && jsonData['data']['accounts'] != null) {
+      List<dynamic> accountsJson = jsonData['data']['accounts'];
       List<SequenceAccount> accountList = [];
 
       final existingAccounts = await dbHelper.getAccounts();
@@ -40,7 +41,7 @@ class SequenceApi {
       final orderMap = {for (var acc in existingAccounts) acc.name: acc.orderIndex ?? 0};
       final hiddenMap = {for (var acc in allExistingAccounts) acc.name: acc.hidden ?? false};
 
-      for (var data in balancesJson) {
+      for (var data in accountsJson) {
         final name = data['name'];
         final existing = allExistingAccounts.firstWhere(
           (acc) => acc.name == name,
@@ -58,14 +59,17 @@ class SequenceApi {
 
         final preservedOrder = orderMap[name] ?? orderMap.length;
         final preservedHidden = hiddenMap[name] ?? false;
+
         final account = SequenceAccount.fromJson(
           data,
         ).copyWith(orderIndex: preservedOrder, hidden: preservedHidden, color: existing.color, tags: existing.tags);
+
         await dbHelper.upsertAccountByName(account);
         if (!preservedHidden) {
           accountList.add(account);
         }
       }
+
       return accountList;
     } else {
       throw ApiDataException(
@@ -99,8 +103,10 @@ class SequenceAccount {
   });
 
   factory SequenceAccount.fromJson(Map<String, dynamic> json) {
+    final balanceJson = json['balance'] as Map<String, dynamic>?;
+
     return SequenceAccount(
-      balance: (json['balance'] as num?)?.toDouble(),
+      balance: (balanceJson?['amountInDollars'] as num?)?.toDouble(),
       type: json['type'],
       name: json['name'],
       hidden: false,
