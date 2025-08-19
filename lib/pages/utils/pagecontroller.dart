@@ -1,3 +1,4 @@
+import 'package:Seqeunce_API_Client/pages/simulator.dart';
 import 'package:flutter/material.dart';
 import 'package:Seqeunce_API_Client/pages/accounts.dart';
 import 'package:Seqeunce_API_Client/pages/rules.dart';
@@ -30,6 +31,7 @@ class _ViewsState extends State<Views> {
           physics: NeverScrollableScrollPhysics(),
           children: [
             AccountPage(key: widget.accountPageKey),
+            Rule_Sim(),
             TransferRules(),
           ],
         ),

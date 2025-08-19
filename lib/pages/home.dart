@@ -108,7 +108,19 @@ class _HomePageState extends State<HomePage> {
       bottomNavigationBar: BottomAppBar(
         child: Row(
           children: [
-            Spacer(flex: 1),
+            Spacer(),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  widget.homepageController.hasClients
+                      ? widget.homepageController.jumpToPage(1)
+                      : widget.homepageController.initialPage;
+                  pageName = "Simulator";
+                });
+              },
+              child: Text("Simulator"),
+            ),
+            Spacer(),
             TextButton(
               onPressed: () {
                 setState(() {
@@ -125,7 +137,7 @@ class _HomePageState extends State<HomePage> {
               onPressed: () {
                 setState(() {
                   widget.homepageController.hasClients
-                      ? widget.homepageController.jumpToPage(1)
+                      ? widget.homepageController.jumpToPage(2)
                       : widget.homepageController.initialPage;
                   pageName = "Rules";
                 });
